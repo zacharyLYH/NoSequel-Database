@@ -4,7 +4,6 @@ import (
 	utils "NoSequel/utils"
 	"os"
 	"strconv"
-	"strings"
 )
 
 /*
@@ -14,9 +13,7 @@ id
 indexList []string
 */
 func RegisterUser(username, password string){
-	databaseUserPath := utils.Pwd()
-	position := strings.LastIndex(databaseUserPath, "NoSequel-Database")
-	databaseUserPath = databaseUserPath[:position]+"NoSequel-Database/database/user"
+	databaseUserPath := utils.FindFolder("user")
 	d, e := os.ReadDir(databaseUserPath)
 	if e != nil {
 		panic(e)

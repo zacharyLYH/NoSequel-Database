@@ -3,6 +3,7 @@ package utils
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 func Pwd() string{
@@ -11,6 +12,13 @@ func Pwd() string{
 		log.Println(err)
 	}
 	return path
+}
+
+// class refers to either user/index/collection. Its used to return the path to the intended folder 
+func FindFolder(class string) string{
+	folderPath := Pwd()
+	position := strings.LastIndex(folderPath, "NoSequel-Database")
+	return folderPath[:position]+"NoSequel-Database/database/"+class
 }
 
 func CreateFile(folder, fileName string){
