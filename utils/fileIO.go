@@ -5,6 +5,14 @@ import (
 	"os"
 )
 
+func Pwd() string{
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	return path
+}
+
 func CreateFile(folder, fileName string){
 	myfile, e := os.Create(folder+"/"+fileName)
     if e != nil {
@@ -23,9 +31,7 @@ func WriteFile(data, filePath string) {
   	_, err2 := file.WriteString(data)
 	if err2 != nil {
 		log.Println("Could not write text to example.txt")
-	}else{
-		log.Println("Operation successful! Text has been appended to example.txt")
-  	}
+	}
 }
 
 func DeleteFile(filePath string){
