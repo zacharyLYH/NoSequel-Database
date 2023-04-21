@@ -14,11 +14,18 @@ func Pwd() string{
 	return path
 }
 
-// class refers to either user/index/collection. Its used to return the path to the intended folder 
+/* 
+If class is either user/index/collection. Its used to return the path to the intended folder. 
+If the class is NOT user/index/collection, just return the root of the project. 
+*/
 func FindFolder(class string) string{
 	folderPath := Pwd()
 	position := strings.LastIndex(folderPath, "NoSequel-Database")
-	return folderPath[:position]+"NoSequel-Database/database/"+class
+	if class == "user" || class == "index" || class == "collection"{
+		return folderPath[:position]+"NoSequel-Database/database/"+class
+	}else{
+		return folderPath[:position]+"NoSequel-Database/"
+	}
 }
 
 func CreateFile(folder, fileName string){
