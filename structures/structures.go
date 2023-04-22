@@ -15,16 +15,16 @@ type User struct {
 	ClientPub *rsa.PublicKey
 }
 
-type Index struct{
-	Owner string
-	IndexName string //descriptive name assigned by the user
-	Id string
+type Index struct {
+	Owner          string
+	IndexName      string //descriptive name assigned by the user
+	Id             string
 	CollectionList string //list of collection folder names
 }
 
-type Response struct{
+type Response struct {
 	Message []byte
-	Status string
+	Status  string
 }
 
 func Marshal(obj interface{}) []byte {
@@ -35,7 +35,7 @@ func Marshal(obj interface{}) []byte {
 	return content
 }
 
-func Unmarshal(data []byte, v interface{}){
+func Unmarshal(data []byte, v interface{}) {
 	err := json.Unmarshal(data, v)
 	if err != nil {
 		log.Fatal(err)

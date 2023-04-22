@@ -4,6 +4,6 @@ import (
 	nd "NoSequel/operations/nonDocuments"
 )
 
-func main(){
-	nd.RegisterUser("ali","password")
+func main() {
+	nd.RegisterUser("ali", "password")
 }

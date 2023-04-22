@@ -14,74 +14,74 @@ import (
 	"testing"
 )
 
-func testRegisterUser(username, password, expectedUid string) (string, error){
-    RegisterUser(username,password)
+func testRegisterUser(username, password, expectedUid string) (string, error) {
+	RegisterUser(username, password)
 	uid := ReturnUidFromUsername(username)
-	if uid != expectedUid{
-		return "", errors.New("Expected" + expectedUid +", got " + uid)
+	if uid != expectedUid {
+		return "", errors.New("Expected" + expectedUid + ", got " + uid)
 	}
 	data := util.ReadFile("user", uid, true)
 	user := st.User{}
 	st.Unmarshal(data, &user)
-	if string(user.Username) != username{
-		return "", errors.New("Expected " + username +", got " + string(user.Username))
+	if string(user.Username) != username {
+		return "", errors.New("Expected " + username + ", got " + string(user.Username))
 	}
-	if string(user.Password) != password{
-		return "", errors.New("Expected " + password +" got " + string(user.Password))
+	if string(user.Password) != password {
+		return "", errors.New("Expected " + password + " got " + string(user.Password))
 	}
 	return "", nil
 }
 
-func testSignIn(username, password, expectedUid string) ([]byte, error){
+func testSignIn(username, password, expectedUid string) ([]byte, error) {
 	createKeyAndSave()
 	serverPublicKey := util.ExtractPubKey("serverPublic.pem")
 	signIn := st.User{
-		Username: util.EncryptRSA(serverPublicKey, []byte(username)),
-		Password: util.EncryptRSA(serverPublicKey, []byte(password)),
+		Username:  util.EncryptRSA(serverPublicKey, []byte(username)),
+		Password:  util.EncryptRSA(serverPublicKey, []byte(password)),
 		ClientPub: util.ExtractPubKey("desktopPublic.pem"),
 	}
 	signInResult := SignIn(st.Marshal(signIn))
 	decryptResult := util.DecryptRSA(signInResult, util.ExtractPrivKey("desktopPrivate.pem"))
 	result := st.User{}
 	st.Unmarshal(decryptResult, &result)
-	if len(result.AesKey) != 32{
+	if len(result.AesKey) != 32 {
 		return []byte{}, errors.New("Expected 32 byte aeskey, got " + strconv.Itoa(len(result.AesKey)))
 	}
-	if result.Id != expectedUid{
+	if result.Id != expectedUid {
 		return []byte{}, errors.New("Expected " + expectedUid + ", got " + result.Id)
-	} 
-	if string(result.Username) != username{
+	}
+	if string(result.Username) != username {
 		return []byte{}, errors.New("Expected " + username + ", got " + string(result.Username))
-	} 
+	}
 	return result.AesKey, nil
 }
 
-func testCreateIndex(aes []byte, username, password, indexname string) error{
+func testCreateIndex(aes []byte, username, password, indexname string) error {
 	encryptedIndexName := util.EncryptAES([]byte(indexname), aes)
 	encryptedPassword := util.EncryptAES([]byte(password), aes)
 	resp := RegisterIndex(encryptedIndexName, encryptedPassword, username)
-	if resp.Status != "200"{
+	if resp.Status != "200" {
 		return errors.New(string(resp.Message))
 	}
 	return nil
 }
 
-func TestRunner(t *testing.T){
-	_,e := testRegisterUser("bob","12345", "2")
-	if e != nil{
+func TestRunner(t *testing.T) {
+	_, e := testRegisterUser("bob", "12345", "2")
+	if e != nil {
 		t.Errorf(e.Error())
 	}
-	aes,e := testSignIn("bob", "12345", "2")
-	if e != nil{
-		t.Errorf(e.Error())
-	}
-	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
-	if e != nil{
+	aes, e := testSignIn("bob", "12345", "2")
+	if e != nil {
 		t.Errorf(e.Error())
 	}
 	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
-	if e != nil{
-		if e.Error() != "Attempting to create duplicate index"{
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
+	if e != nil {
+		if e.Error() != "Attempting to create duplicate index" {
 			t.Errorf(e.Error())
 		}
 	}
@@ -92,7 +92,7 @@ func TestRunner(t *testing.T){
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), "bob,2")
 }
 
-// Used only for testing. 
+// Used only for testing.
 func createKeyAndSave() {
 	privatekey, err := rsa.GenerateKey(crytpRand.Reader, 2048)
 	if err != nil {
@@ -135,4 +135,3 @@ func createKeyAndSave() {
 		os.Exit(1)
 	}
 }
-
