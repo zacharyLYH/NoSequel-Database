@@ -170,9 +170,68 @@ func SignIn(ciphertext []byte) []byte {
 		saveAes.AesKey = ret.AesKey
 		saveAes.Id = data.Id
 		saveAes.ClientPub = nil
+		saveAes.Username = plaintext.Username
+		saveAes.Password = plaintext.Password
+		saveAes.IndexList = ret.IndexList
 		// Write the updated User instance to file
 		util.WriteJsonFile(st.Marshal(saveAes), util.AssembleFileName("user", uid, true))
 	}
 	// Encrypt and return the serialized return User instance
 	return util.EncryptRSA(plaintext.ClientPub, st.Marshal(ret)) 
+}
+
+func GetAesKeyFromUsername(username string) []byte{
+	// Obtain the user ID associated with the provided username
+	uid := ReturnUidFromUsername(username)
+	file := st.User{}
+	st.Unmarshal(util.ReadFile("user", uid, true), &file)
+	return file.AesKey
+} 
+
+func GetPasswordFromUsername(username string) []byte{
+	// Obtain the user ID associated with the provided username
+	uid := ReturnUidFromUsername(username)
+	file := st.User{}
+	st.Unmarshal(util.ReadFile("user", uid, true), &file)
+	return file.Password
+}
+
+func CreateIndexFile(uid, iid, username, indexname string) string {
+	util.CreateJsonFile("index", uid+"-"+iid)
+	data := st.Index{}
+	data.Owner = username
+	data.Id = iid
+	data.IndexName = indexname
+	util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("index", uid+"-"+iid, true))
+	return uid+"-"+iid
+}
+
+func RegisterIndex(indexname, password []byte, username string) st.Response { //indexname and password are aes encrypted
+	response := st.Response{}
+	aes := GetAesKeyFromUsername(username)
+	decryptPassword := util.DecryptAES(aes, password)
+	decryptIndexName := util.DecryptAES(aes, indexname)
+	uid := ReturnUidFromUsername(username)
+	if bytes.Equal(GetPasswordFromUsername(username), []byte(decryptPassword)){
+		data := st.User{}
+		st.Unmarshal(util.ReadFile("user", uid, true), &data)
+		for _,d := range data.IndexList{ //find duplicate indexs
+			index := st.Index{}
+			st.Unmarshal(util.ReadFile("index", d, true), &index)
+			if index.IndexName == decryptIndexName{
+				response.Message = []byte("Attempting to create duplicate index")
+				response.Status = "400"
+				return response
+			}
+		}
+		newIndexFileName := CreateIndexFile(uid, strconv.Itoa(len(data.IndexList)), username, decryptIndexName)
+		data.IndexList = append(data.IndexList, newIndexFileName)
+		util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("user", uid, true))
+		response.Message = []byte("Successfully created the index " + decryptIndexName + " in the file " + newIndexFileName)
+		response.Status = "200"
+	}else{
+		response.Message = []byte("Something went wrong. Might be a bad password")
+		response.Status = "403"
+	}
+	return response
 }
