@@ -51,7 +51,7 @@ func ExtractPrivKey(location string) *rsa.PrivateKey {
 func DecryptRSA(encryptedBytes []byte, privateKey *rsa.PrivateKey) []byte {
 	decryptedBytes, err := privateKey.Decrypt(nil, encryptedBytes, &rsa.OAEPOptions{Hash: crypto.SHA256})
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return decryptedBytes
 }
@@ -64,7 +64,7 @@ func EncryptRSA(publicKey *rsa.PublicKey, payload []byte) []byte {
 		payload,
 		nil)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return encryptedBytes
 }
