@@ -18,7 +18,7 @@ func testRegisterUser(username, password, expectedUid string) (string, error){
     RegisterUser(username,password)
 	uid := ReturnUidFromUsername(username)
 	if uid != expectedUid{
-		return "", errors.New("Expected 2, got " + uid)
+		return "", errors.New("Expected" + expectedUid +", got " + uid)
 	}
 	data := util.ReadFile("user", uid, true)
 	user := st.User{}
@@ -67,7 +67,8 @@ func TestRunner(t *testing.T){
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
-	// util.DeleteFile("user", "2", true)
+	util.DeleteFile("user", "2", true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), "bob,2")
 }
 
 // Used only for testing. 
@@ -113,3 +114,4 @@ func createKeyAndSave() {
 		os.Exit(1)
 	}
 }
+
