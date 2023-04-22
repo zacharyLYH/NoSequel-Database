@@ -23,33 +23,70 @@ func FindFolder(class string) string{
 	position := strings.LastIndex(folderPath, "NoSequel-Database")
 	if class == "user" || class == "index" || class == "collection"{
 		return folderPath[:position]+"NoSequel-Database/database/"+class
+	}else if class == "admin-user" {
+		return folderPath[:position]+"NoSequel-Database/database/admin-user"
 	}else{
 		return folderPath[:position]+"NoSequel-Database/"
 	}
 }
 
-func CreateFile(folder, fileName string){
+func CreateTxtFile(folder, fileName string) string{
 	myfile, e := os.Create(folder+"/"+fileName)
     if e != nil {
         log.Fatal(e)
     }
     myfile.Close()
+	return folder+"/"+fileName
 }
 
-func WriteFile(data, filePath string) {
+func CreateJsonFile(class, fileName string) string {
+	myfile, e := os.Create(AssembleFileName(class, fileName, true))
+    if e != nil {
+        log.Fatal(e)
+    }
+    myfile.Close()
+	return myfile.Name()
+}
+
+func AssembleFileName(class, filename string, json bool) string{
+	filePath := FindFolder(class)+"/"+filename
+	if json {
+		filePath += ".json"
+	}
+	return filePath
+}
+
+func ReadFile(class, filename string, json bool) []byte{
+	filePath := AssembleFileName(class, filename, json)
+	file, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return file
+}
+
+func WriteTxtFile(data, filePath string) {
 	file,err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
-		log.Println("Could not open example.txt")
+		log.Println("Could not open " + filePath)
 		return
 	}
 	defer file.Close()
   	_, err2 := file.WriteString(data)
 	if err2 != nil {
-		log.Println("Could not write text to example.txt")
+		log.Println("Could not write text to " + filePath)
 	}
 }
 
-func DeleteFile(filePath string){
+func WriteJsonFile(data []byte, filePath string) {
+	err := os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func DeleteFile(class, filename string, json bool){
+	filePath := AssembleFileName(class, filename, true)
 	e := os.Remove(filePath)
     if e != nil {
         log.Fatal(e)
