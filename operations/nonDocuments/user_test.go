@@ -32,7 +32,7 @@ func testRegisterUser(username, password, expectedUid string) (string, error){
 	return "", nil
 }
 
-func testSignIn(username, password, expectedUid string) (string, error){
+func testSignIn(username, password, expectedUid string) ([]byte, error){
 	createKeyAndSave()
 	serverPublicKey := util.ExtractPubKey("serverPublic.pem")
 	signIn := st.User{
@@ -45,15 +45,25 @@ func testSignIn(username, password, expectedUid string) (string, error){
 	result := st.User{}
 	st.Unmarshal(decryptResult, &result)
 	if len(result.AesKey) != 32{
-		return "", errors.New("Expected 32 byte aeskey, got " + strconv.Itoa(len(result.AesKey)))
+		return []byte{}, errors.New("Expected 32 byte aeskey, got " + strconv.Itoa(len(result.AesKey)))
 	}
 	if result.Id != expectedUid{
-		return "", errors.New("Expected " + expectedUid + ", got " + result.Id)
+		return []byte{}, errors.New("Expected " + expectedUid + ", got " + result.Id)
 	} 
 	if string(result.Username) != username{
-		return "", errors.New("Expected " + username + ", got " + string(result.Username))
+		return []byte{}, errors.New("Expected " + username + ", got " + string(result.Username))
 	} 
-	return "", nil
+	return result.AesKey, nil
+}
+
+func testCreateIndex(aes []byte, username, password, indexname string) error{
+	encryptedIndexName := util.EncryptAES([]byte(indexname), aes)
+	encryptedPassword := util.EncryptAES([]byte(password), aes)
+	resp := RegisterIndex(encryptedIndexName, encryptedPassword, username)
+	if resp.Status != "200"{
+		return errors.New(string(resp.Message))
+	}
+	return nil
 }
 
 func TestRunner(t *testing.T){
@@ -61,13 +71,24 @@ func TestRunner(t *testing.T){
 	if e != nil{
 		t.Errorf(e.Error())
 	}
-	_,e = testSignIn("bob", "12345", "2")
+	aes,e := testSignIn("bob", "12345", "2")
 	if e != nil{
 		t.Errorf(e.Error())
+	}
+	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
+	if e != nil{
+		t.Errorf(e.Error())
+	}
+	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
+	if e != nil{
+		if e.Error() != "Attempting to create duplicate index"{
+			t.Errorf(e.Error())
+		}
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
 	util.DeleteFile("user", "2", true)
+	util.DeleteFile("index", "2-0", true)
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), "bob,2")
 }
 
