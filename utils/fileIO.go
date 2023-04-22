@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"bufio"
+	"bytes"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -91,6 +94,54 @@ func DeleteFile(class, filename string, json bool){
     if e != nil {
         log.Fatal(e)
     }
+}
+
+/*
+RemoveLineFromFile removes the first line that matches the specified text from the specified file.	
+The function reads the file into memory, removes the matching line, and writes the updated contents	
+back to the file.
+*/
+func RemoveLineFromFile(filePath string, textToRemove string) error {
+    // Open the file for reading and writing.
+    file, err := os.OpenFile(filePath, os.O_RDWR, 0644)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+    // Create a new scanner to read the file line by line.
+    scanner := bufio.NewScanner(file)
+    // Create a buffer to hold the new contents of the file.
+    var buffer bytes.Buffer
+    // Loop through each line in the file.
+    for scanner.Scan() {
+        line := scanner.Text()
+        // If the line does not match the specified text to remove, add it to the buffer.
+        if line != textToRemove {
+            buffer.WriteString(line)
+            buffer.WriteString("\n")
+        }
+    }
+    // Truncate the file to 0 bytes.
+    err = file.Truncate(0)
+    if err != nil {
+        return err
+    }
+    // Seek to the beginning of the file.
+    _, err = file.Seek(0, 0)
+    if err != nil {
+        return err
+    }
+    // Write the new contents of the file to the buffer.
+    _, err = io.Copy(file, &buffer)
+    if err != nil {
+        return err
+    }
+    // Sync the file to ensure that all changes are written to disk.
+    err = file.Sync()
+    if err != nil {
+        return err
+    }
+    return nil
 }
 
 /*
