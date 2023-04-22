@@ -12,72 +12,125 @@ import (
 	"strings"
 )
 
+/*
+LineCounter counts the number of lines in an io.Reader.
+It reads the data from the reader in 32 KB chunks, counts the number of
+newline characters, and returns the total count of newlines (i.e. lines).
+If an error occurs while reading the data, the function returns the current
+count of lines and the error.
+*/
 func LineCounter(r io.Reader) (int, error) {
+    // Initialize a buffer to hold the data read from the reader.
     buf := make([]byte, 32*1024)
+    // Initialize a counter to keep track of the number of lines.
     count := 0
+    // Define a byte slice that represents the line separator (i.e. newline character).
     lineSep := []byte{'\n'}
+    // Loop until the end of the reader is reached or an error occurs.
     for {
+        // Read up to 32 KB of data from the reader into the buffer.
         c, err := r.Read(buf)
+        // Increment the counter by the number of newline characters in the buffer.
         count += bytes.Count(buf[:c], lineSep)
-        switch {
-        case err == io.EOF:
-            return count, nil
-        case err != nil:
+        // If an error occurred while reading the data...
+        if err != nil {
+            // If the error was an EOF (i.e. end of file) error, return the final count of lines.
+            if err == io.EOF {
+                return count, nil
+            }
+            // Otherwise, return the current count of lines and the error.
             return count, err
         }
     }
 }
 
-func RegisterUser(username, password string) { 
-	if ReturnUidFromUsername(username) != ""{
-		log.Fatal("Attempting to create duplicate username")
-	}
-	adminPath := util.FindFolder("admin-user")
-	file, err := os.OpenFile(adminPath, os.O_RDONLY, 0444)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-	fileSize, err := LineCounter(file)
-	if err != nil{
-		log.Fatal(err)
-	}
-	nextUid := strconv.Itoa(fileSize)
-	jsonFilePath := util.CreateJsonFile("user", nextUid)
-	log.Println(jsonFilePath)
-	user := st.User{
-		Username: []byte(username),
-		Password: []byte(password),
-		Id: nextUid,
-	}
-	util.WriteJsonFile(st.Marshal(user), jsonFilePath)
-	util.WriteTxtFile(username+","+nextUid+"\n", adminPath)
-}
-
-func ReturnUidFromUsername(username string) string {
-	readFile, err := os.Open(util.FindFolder("admin-user"))
+/*
+RegisterUser checks if the specified username already exists in the "admin-user" file. If the
+username is not a duplicate, the function creates a new user ID and saves the user's username,
+password, and ID in the "user" and "admin-user" files.
+*/
+func RegisterUser(username, password string) {
+    // Check if the specified username already exists in the "admin-user" file.
+    if ReturnUidFromUsername(username) != "" {
+        log.Fatal("Attempting to create duplicate username")
+    }
+    // Get the path to the "admin-user" file and open it for reading.
+    adminPath := util.FindFolder("admin-user")
+    file, err := os.OpenFile(adminPath, os.O_RDONLY, 0444)
     if err != nil {
         log.Fatal(err)
     }
-    fileScanner := bufio.NewScanner(readFile)
-    fileScanner.Split(bufio.ScanLines)
-    for fileScanner.Scan() {
-        line := strings.Split(fileScanner.Text(), ",")
-		if line[0] == username{
-			return line[1]
-		}
+    defer file.Close()
+    // Get the current size of the "admin-user" file (i.e. the number of existing users).
+    fileSize, err := LineCounter(file)
+    if err != nil {
+        log.Fatal(err)
     }
-    readFile.Close()
-	return ""
+    // Generate a new UID (user ID) for the new user by converting the file size to a string.
+    nextUid := strconv.Itoa(fileSize)
+    // Create a new JSON file for the user's data using the new UID.
+    jsonFilePath := util.CreateJsonFile("user", nextUid)
+    // Create a new User struct with the username, password, and UID.
+    user := st.User{
+        Username: []byte(username),
+        Password: []byte(password),
+        Id:       nextUid,
+    }
+    // Write the user's data to the JSON file.
+    util.WriteJsonFile(st.Marshal(user), jsonFilePath)
+    // Append the user's username and UID to the "admin-user" file.
+    util.WriteTxtFile(username+","+nextUid+"\n", adminPath)
 }
 
-// Supply uid without prefixing "/"
-func ComparePassword(uid string, suppliedPassword []byte) bool {
-	data := util.ReadFile("user", uid, true)
-	user := st.User{}
-	st.Unmarshal(data, &user)
-	return bytes.Equal(user.Password, suppliedPassword)
+
+/*
+ReturnUidFromUsername reads the contents of the "admin-user" file and searches for the
+line that contains the specified username. If a line containing the username is found,
+the function returns the UID (user ID) associated with that username. If no matching line
+is found, the function returns an empty string.
+The "admin-user" file should have one line per user, with the format "username,uid".
+*/
+func ReturnUidFromUsername(username string) string {
+    // Open the "admin-user" file for reading.
+    readFile, err := os.Open(util.FindFolder("admin-user"))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer readFile.Close()
+    // Create a new scanner to read the file line by line.
+    fileScanner := bufio.NewScanner(readFile)
+    fileScanner.Split(bufio.ScanLines)
+    // Loop through each line in the file.
+    for fileScanner.Scan() {
+        // Split the line into separate fields based on the comma separator.
+        line := strings.SplitN(fileScanner.Text(), ",", 2)
+        // If the first field (i.e. the username) matches the specified username...
+        if line[0] == username{
+            // Return the UID (i.e. the second field) associated with the username.
+            return line[1]
+        }
+    }
+    // If no matching line was found, return an empty string.
+    return ""
 }
+
+/*
+ComparePassword reads the hashed password for the user with the specified UID from the "user" folder
+and compares it to the supplied password. If the passwords match, the function returns true. Otherwise,
+it returns false.
+*/
+func ComparePassword(uid string, suppliedPassword []byte) bool {
+    // Read the data for the user with the specified UID from the "user" folder.
+    data := util.ReadFile("user", uid, true)
+    // Unmarshal the data into a User struct.
+    user := st.User{}
+    st.Unmarshal(data, &user)
+    // Compare the hashed password for the user to the supplied password.
+    // Note: The user's password is stored as a byte slice that has been hashed using a secure hashing algorithm.
+    // To compare the passwords, we use the bytes.Equal function from the standard library.
+    return bytes.Equal(user.Password, suppliedPassword)
+}
+
 
 /*
 SignIn handles the user sign-in process. The function takes an encrypted 
