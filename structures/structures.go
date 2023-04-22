@@ -10,9 +10,21 @@ type User struct {
 	Username  []byte
 	Password  []byte
 	Id        string
-	IndexList map[string][]string
+	IndexList []string //list of index folder names
 	AesKey    []byte
 	ClientPub *rsa.PublicKey
+}
+
+type Index struct{
+	Owner string
+	IndexName string //descriptive name assigned by the user
+	Id string
+	CollectionList string //list of collection folder names
+}
+
+type Response struct{
+	Message []byte
+	Status string
 }
 
 func Marshal(obj interface{}) []byte {
