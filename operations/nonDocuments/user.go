@@ -150,11 +150,10 @@ Register collection takes an indexName, colName, password (all 3 encrypted byte 
 func RegisterCollection(username string, indexName, colName, password []byte) st.Response {
 	// Initialize response struct
 	response := st.Response{}
-	// Get the AES key for the username
+	// Get the AES key for the given username
 	aes := GetAesKeyFromUsername(username)
-	// Decrypt indexname using the AES key
+	// Decrypt indexName and colName using the AES key
 	decryptIndexName := util.DecryptAES(aes, indexName)
-	// Decrypt colName using the AES key
 	decryptColName := util.DecryptAES(aes, colName)
 	// Get the user's unique ID
 	uid := ReturnUidFromUsername(username)
@@ -162,30 +161,36 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 	userData := st.User{}
 	userDataBytes := util.ReadFile("user", uid, true)
 	st.Unmarshal(userDataBytes, &userData)
-	// Check for password match before performing other operations
+	// Check if the provided password matches before performing other operations
 	if !CheckCredentials(username, password) {
-		response.Message = []byte("Something went wrong. Might be a bad password")
+		response.Message = []byte("Something went wrong. Might be a bad password.")
 		response.Status = "403"
 		return response
 	}
+	// Iterate through user's index list to find the matching index
 	for _, d := range userData.IndexList {
 		index := st.Index{}
 		st.Unmarshal(util.ReadFile("index", d, true), &index)
+		// Check if the decrypted index name matches
 		if index.IndexName == decryptIndexName {
+			// Check if the decrypted collection name already exists
 			if _, exists := index.CollectionList[decryptColName]; !exists {
+				// Create a new collection file and update the index's collection list
 				newColFileName := CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionList)), decryptColName, index.IndexName)
 				index.CollectionList[decryptColName] = struct{}{}
 				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
-				// Return a success response with the created index details
+				// Return a success response with the created collection details
 				response.Message = []byte("Successfully created the collection " + decryptColName + " in the file " + newColFileName)
 				response.Status = "200"
 				return response
 			} else {
-				response.Message = []byte("Attempting to create duplicate collection")
+				// Return an error response if the collection already exists
+				response.Message = []byte("Attempting to create duplicate collection.")
 				response.Status = "400"
 				return response
 			}
 		}
 	}
+	// Return an empty response if no matching index is found
 	return response
 }
