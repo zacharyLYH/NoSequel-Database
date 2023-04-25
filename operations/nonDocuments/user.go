@@ -143,3 +143,49 @@ func RegisterIndex(indexname, password []byte, username string) st.Response {
 	response.Status = "200"
 	return response
 }
+
+/*
+Register collection takes an indexName, colName, password (all 3 encrypted byte slices), username and returns 200 on success, 403 otherwise.
+*/
+func RegisterCollection(username string, indexName, colName, password []byte) st.Response {
+	// Initialize response struct
+	response := st.Response{}
+	// Get the AES key for the username
+	aes := GetAesKeyFromUsername(username)
+	// Decrypt indexname using the AES key
+	decryptIndexName := util.DecryptAES(aes, indexName)
+	// Decrypt colName using the AES key
+	decryptColName := util.DecryptAES(aes, colName)
+	// Get the user's unique ID
+	uid := ReturnUidFromUsername(username)
+	// Read user data only once
+	userData := st.User{}
+	userDataBytes := util.ReadFile("user", uid, true)
+	st.Unmarshal(userDataBytes, &userData)
+	// Check for password match before performing other operations
+	if !CheckCredentials(username, password) {
+		response.Message = []byte("Something went wrong. Might be a bad password")
+		response.Status = "403"
+		return response
+	}
+	for _, d := range userData.IndexList {
+		index := st.Index{}
+		st.Unmarshal(util.ReadFile("index", d, true), &index)
+		if index.IndexName == decryptIndexName {
+			if _, exists := index.CollectionList[decryptColName]; !exists {
+				newColFileName := CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionList)), decryptColName, index.IndexName)
+				index.CollectionList[decryptColName] = struct{}{}
+				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
+				// Return a success response with the created index details
+				response.Message = []byte("Successfully created the collection " + decryptColName + " in the file " + newColFileName)
+				response.Status = "200"
+				return response
+			} else {
+				response.Message = []byte("Attempting to create duplicate collection")
+				response.Status = "400"
+				return response
+			}
+		}
+	}
+	return response
+}
