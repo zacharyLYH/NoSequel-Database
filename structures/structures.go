@@ -19,7 +19,7 @@ type Index struct {
 	Owner          string
 	IndexName      string //descriptive name assigned by the user
 	Id             string
-	CollectionList string //list of collection folder names
+	CollectionList []string //list of collection folder names
 }
 
 type Response struct {
