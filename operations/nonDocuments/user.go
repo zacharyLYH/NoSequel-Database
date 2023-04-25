@@ -94,24 +94,6 @@ func SignIn(ciphertext []byte) []byte {
 	return util.EncryptRSA(plaintext.ClientPub, st.Marshal(ret))
 }
 
-// CreateIndexFile creates a new index file for the specified user and index.
-// It returns the file name of the created index file.
-func CreateIndexFile(uid, iid, username, indexname string) string {
-	// Assemble file name using uid and iid
-	fileName := uid + "-" + iid
-	// Create the JSON file for the index
-	util.CreateJsonFile("index", fileName)
-	// Initialize index data
-	data := st.Index{
-		Owner:     username,
-		Id:        iid,
-		IndexName: indexname,
-	}
-	// Write index data to the file
-	util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("index", fileName, true))
-	return fileName
-}
-
 /*
 RegisterIndex creates a new index for a user if the provided password is correct.
 The index name and password are decrypted using the user's AES key before processing.

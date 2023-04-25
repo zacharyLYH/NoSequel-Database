@@ -121,3 +121,21 @@ func CheckCredentials(username string, password []byte) bool {
 	// Decrypt the password and check
 	return bytes.Equal(GetPasswordFromUsername(username), []byte(util.DecryptAES(aes, password)))
 }
+
+// CreateIndexFile creates a new index file for the specified user and index.
+// It returns the file name of the created index file.
+func CreateIndexFile(uid, iid, username, indexname string) string {
+	// Assemble file name using uid and iid
+	fileName := uid + "-" + iid
+	// Create the JSON file for the index
+	util.CreateJsonFile("index", fileName)
+	// Initialize index data
+	data := st.Index{
+		Owner:     username,
+		Id:        iid,
+		IndexName: indexname,
+	}
+	// Write index data to the file
+	util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("index", fileName, true))
+	return fileName
+}
