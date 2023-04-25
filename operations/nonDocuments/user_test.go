@@ -66,20 +66,20 @@ func testCreateIndex(aes []byte, username, password, indexname string) error {
 	return nil
 }
 
-func TestRunner(t *testing.T) {
-	_, e := testRegisterUser("bob", "12345", "2")
+func TestCreateIndex(t *testing.T) {
+	_, e := testRegisterUser("carlos", "12345", "3")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	aes, e := testSignIn("bob", "12345", "2")
+	aes, e := testSignIn("carlos", "12345", "3")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
+	e = testCreateIndex(aes, "carlos", "12345", "MyFirstIndex")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
+	e = testCreateIndex(aes, "carlos", "12345", "MyFirstIndex")
 	if e != nil {
 		if e.Error() != "Attempting to create duplicate index" {
 			t.Errorf(e.Error())
@@ -87,9 +87,9 @@ func TestRunner(t *testing.T) {
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
-	util.DeleteFile("user", "2", true)
-	util.DeleteFile("index", "2-0", true)
-	util.RemoveLineFromFile(util.FindFolder("admin-user"), "bob,2")
+	util.DeleteFile("user", "3", true)
+	util.DeleteFile("index", "3-0", true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), "carlos,3")
 }
 
 // Used only for testing.
