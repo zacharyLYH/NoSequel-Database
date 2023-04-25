@@ -19,7 +19,16 @@ type Index struct {
 	Owner          string
 	IndexName      string //descriptive name assigned by the user
 	Id             string
-	CollectionList []string //list of collection folder names
+	CollectionList map[string]struct{} //Set of collection folder names. A common pattern we're using is matching file names to determine which file we want to work on. This way, we can avoid loading the entire Collection into memory JUST TO get its name, which is inefficient.
+}
+
+type Collection struct {
+	Index   string //descriptive index name
+	ColName string
+	DocList []Document
+}
+
+type Document struct {
 }
 
 type Response struct {
