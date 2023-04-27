@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"io"
 	"log"
 	mathRand "math/rand"
@@ -69,23 +70,30 @@ func EncryptRSA(publicKey *rsa.PublicKey, payload []byte) []byte {
 	return encryptedBytes
 }
 
-func EncryptAES(text, key []byte) []byte {
-	c, err := aes.NewCipher(key)
+func EncryptAES(plaintext interface{}, key []byte) []byte {
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println(err)
 	}
-	gcm, err := cipher.NewGCM(c)
+	var plainTextBytes []byte
+	switch v := plaintext.(type) {
+	case []byte:
+		plainTextBytes = v
+	default:
+		plainTextBytes = []byte(fmt.Sprintf("%v", v))
+	}
+	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
 		log.Println(err)
 	}
-	nonce := make([]byte, gcm.NonceSize())
+	nonce := make([]byte, aesgcm.NonceSize())
 	if _, err = io.ReadFull(crytpRand.Reader, nonce); err != nil {
 		log.Println(err)
 	}
-	return gcm.Seal(nonce, nonce, text, nil)
+	return aesgcm.Seal(nonce, nonce, plainTextBytes, nil)
 }
 
-func DecryptAES(key, ciphertext []byte) string {
+func DecryptAES(key, ciphertext []byte) []byte {
 	c, err := aes.NewCipher(key)
 	if err != nil {
 		log.Println(err)
@@ -103,5 +111,6 @@ func DecryptAES(key, ciphertext []byte) string {
 	if err != nil {
 		log.Println(err)
 	}
-	return string(plaintext)
+	return plaintext
 }
+
