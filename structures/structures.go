@@ -33,12 +33,20 @@ type Collection struct {
 
 type Document struct {
 	DocId string //<uid>-<iid>-<cid>-<did>
-	Data  interface{}
+	Data  map[string]interface{}
 }
 
 type Response struct {
 	Message []byte
 	Status  string
+	Data    map[string]interface{}
+}
+
+type TestData struct {
+	Username    string
+	Password    string
+	Aes         []byte
+	ExpectedUid string
 }
 
 func Marshal(obj interface{}) []byte {
