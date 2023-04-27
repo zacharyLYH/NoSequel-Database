@@ -1,6 +1,7 @@
 package nondocuments
 
 import (
+	op "NoSequel/operations"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 	crytpRand "crypto/rand"
@@ -16,7 +17,7 @@ import (
 
 func testRegisterUser(username, password, expectedUid string) (string, error) {
 	RegisterUser(username, password)
-	uid := ReturnUidFromUsername(username)
+	uid := op.ReturnUidFromUsername(username)
 	if uid != expectedUid {
 		return "", errors.New("Expected" + expectedUid + ", got " + uid)
 	}

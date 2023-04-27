@@ -1,4 +1,4 @@
-package nondocuments
+package operations
 
 import (
 	st "NoSequel/structures"

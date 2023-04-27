@@ -1,6 +1,7 @@
 package nondocuments
 
 import (
+	op "NoSequel/operations"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 	"log"
@@ -15,7 +16,7 @@ password, and ID in the "user" and "admin-user" files.
 */
 func RegisterUser(username, password string) {
 	// Check if the specified username already exists in the "admin-user" file.
-	if ReturnUidFromUsername(username) != "" {
+	if op.ReturnUidFromUsername(username) != "" {
 		log.Fatal("Attempting to create duplicate username")
 	}
 	// Get the path to the "admin-user" file and open it for reading.
@@ -26,7 +27,7 @@ func RegisterUser(username, password string) {
 	}
 	defer file.Close()
 	// Get the current size of the "admin-user" file (i.e. the number of existing users).
-	fileSize, err := LineCounter(file)
+	fileSize, err := op.LineCounter(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,11 +65,11 @@ func SignIn(ciphertext []byte) []byte {
 	plaintext.Username = util.DecryptRSA(plaintext.Username, privateKey)
 	plaintext.Password = util.DecryptRSA(plaintext.Password, privateKey)
 	// Obtain the user ID associated with the provided username
-	uid := ReturnUidFromUsername(string(plaintext.Username))
+	uid := op.ReturnUidFromUsername(string(plaintext.Username))
 	// Initialize a return User instance
 	ret := st.User{}
 	// Check if the provided password is correct
-	if ComparePassword(uid, plaintext.Password) {
+	if op.ComparePassword(uid, plaintext.Password) {
 		// Deserialize the user's data from the file
 		data := st.User{}
 		st.Unmarshal(util.ReadFile("user", uid, true), &data)
@@ -103,17 +104,17 @@ func RegisterIndex(indexname, password []byte, username string) st.Response {
 	// Initialize response struct
 	response := st.Response{}
 	// Get the AES key for the username
-	aes := GetAesKeyFromUsername(username)
+	aes := op.GetAesKeyFromUsername(username)
 	// Decrypt indexname using the AES key
 	decryptIndexName := util.DecryptAES(aes, indexname)
 	// Get the user's unique ID
-	uid := ReturnUidFromUsername(username)
+	uid := op.ReturnUidFromUsername(username)
 	// Read user data only once
 	userData := st.User{}
 	userDataBytes := util.ReadFile("user", uid, true)
 	st.Unmarshal(userDataBytes, &userData)
 	// Check for password match before performing other operations
-	if !CheckCredentials(username, password) {
+	if !op.CheckCredentials(username, password) {
 		response.Message = []byte("Something went wrong. Might be a bad password")
 		response.Status = "403"
 		return response
@@ -135,7 +136,7 @@ func RegisterIndex(indexname, password []byte, username string) st.Response {
 		return response
 	}
 	// Create the new index file and update the user data
-	newIndexFileName := CreateIndexFile(uid, strconv.Itoa(len(userData.IndexList)), username, decryptIndexName)
+	newIndexFileName := op.CreateIndexFile(uid, strconv.Itoa(len(userData.IndexList)), username, decryptIndexName)
 	userData.IndexList = append(userData.IndexList, newIndexFileName)
 	util.WriteJsonFile(st.Marshal(userData), util.AssembleFileName("user", uid, true))
 	// Return a success response with the created index details
@@ -151,18 +152,18 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 	// Initialize response struct
 	response := st.Response{}
 	// Get the AES key for the given username
-	aes := GetAesKeyFromUsername(username)
+	aes := op.GetAesKeyFromUsername(username)
 	// Decrypt indexName and colName using the AES key
 	decryptIndexName := util.DecryptAES(aes, indexName)
 	decryptColName := util.DecryptAES(aes, colName)
 	// Get the user's unique ID
-	uid := ReturnUidFromUsername(username)
+	uid := op.ReturnUidFromUsername(username)
 	// Read user data only once
 	userData := st.User{}
 	userDataBytes := util.ReadFile("user", uid, true)
 	st.Unmarshal(userDataBytes, &userData)
 	// Check if the provided password matches before performing other operations
-	if !CheckCredentials(username, password) {
+	if !op.CheckCredentials(username, password) {
 		response.Message = []byte("Something went wrong. Might be a bad password.")
 		response.Status = "403"
 		return response
@@ -176,7 +177,7 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 			// Check if the decrypted collection name already exists
 			if _, exists := index.CollectionSet[decryptColName]; !exists {
 				// Create a new collection file and update the index's collection list
-				newColFileName := CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionSet)), decryptColName, index.IndexName)
+				newColFileName := op.CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionSet)), decryptColName, index.IndexName)
 				index.CollectionSet[decryptColName] = struct{}{}
 				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
 				// Return a success response with the created collection details
