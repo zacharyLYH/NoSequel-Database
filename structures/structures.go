@@ -29,6 +29,8 @@ type Collection struct {
 }
 
 type Document struct {
+	DocId string //<uid>-<iid>-<cid>-<did>
+	Data  interface{}
 }
 
 type Response struct {
