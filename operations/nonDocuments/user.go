@@ -107,7 +107,7 @@ func RegisterIndex(indexname, password []byte, username string) st.Response {
 	// Get the AES key for the username
 	aes := op.GetAesKeyFromUsername(username)
 	// Decrypt indexname using the AES key
-	decryptIndexName := util.DecryptAES(aes, indexname)
+	decryptIndexName := string(util.DecryptAES(aes, indexname))
 	// Get the user's unique ID
 	uid := op.ReturnUidFromUsername(username)
 	// Read user data only once
@@ -156,8 +156,8 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 	// Get the AES key for the given username
 	aes := op.GetAesKeyFromUsername(username)
 	// Decrypt indexName and colName using the AES key
-	decryptIndexName := util.DecryptAES(aes, indexName)
-	decryptColName := util.DecryptAES(aes, colName)
+	decryptIndexName := string(util.DecryptAES(aes, indexName))
+	decryptColName := string(util.DecryptAES(aes, colName))
 	// Get the user's unique ID
 	uid := op.ReturnUidFromUsername(username)
 	// Read user data only once
