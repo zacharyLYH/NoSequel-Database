@@ -20,7 +20,7 @@ type Index struct {
 	Owner         string
 	IndexName     string //descriptive name assigned by the user
 	Id            string
-	CollectionSet map[string]struct{} //Set of collection folder names. A common pattern we're using is matching file names to determine which file we want to work on. This way, we can avoid loading the entire Collection into memory JUST TO get its name, which is inefficient.
+	CollectionSet map[string]string //Map of collection natural name to the collection's file path
 	NextColId     int
 }
 

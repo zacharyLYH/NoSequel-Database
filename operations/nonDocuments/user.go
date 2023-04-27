@@ -181,7 +181,7 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 				// Create a new collection file and update the index's collection list
 				newColFileName := op.CreateCollectionFile(uid, index.Id, strconv.Itoa(index.NextColId), decryptColName, index.IndexName)
 				index.NextColId++
-				index.CollectionSet[decryptColName] = struct{}{}
+				index.CollectionSet[decryptColName] = newColFileName
 				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
 				// Return a success response with the created collection details
 				response.Message = []byte("Successfully created the collection " + decryptColName + " in the file " + newColFileName)

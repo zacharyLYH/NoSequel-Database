@@ -134,7 +134,7 @@ func CreateIndexFile(uid, iid, username, indexname string) string {
 		Owner:         username,
 		Id:            iid,
 		IndexName:     indexname,
-		CollectionSet: make(map[string]struct{}),
+		CollectionSet: make(map[string]string),
 		NextColId:     0,
 	}
 	// Write index data to the file
