@@ -1,5 +1,5 @@
 .vscode
 
 # Client Public Private Keys
-/operations/nonDocuments/desktopPrivate.pem
-/operations/nonDocuments/desktopPublic.pem
+/operations/operations_testing/desktopPrivate.pem
+/operations/operations_testing/desktopPublic.pem
