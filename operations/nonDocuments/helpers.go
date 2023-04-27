@@ -134,7 +134,7 @@ func CreateIndexFile(uid, iid, username, indexname string) string {
 		Owner:          username,
 		Id:             iid,
 		IndexName:      indexname,
-		CollectionList: make(map[string]struct{}),
+		CollectionSet: make(map[string]struct{}),
 	}
 	// Write index data to the file
 	util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("index", fileName, true))
@@ -150,7 +150,7 @@ func CreateCollectionFile(uid, iid, cid, colname, indexname string) string {
 	col := st.Collection{
 		Index:   indexname,
 		ColName: colname,
-		DocList: make([]st.Document, 0),
+		DocList: make(map[string]st.Document),
 	}
 	// Write index data to the file
 	util.WriteJsonFile(st.Marshal(col), util.AssembleFileName("collection", fileName, true))

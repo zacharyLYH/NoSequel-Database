@@ -174,10 +174,10 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 		// Check if the decrypted index name matches
 		if index.IndexName == decryptIndexName {
 			// Check if the decrypted collection name already exists
-			if _, exists := index.CollectionList[decryptColName]; !exists {
+			if _, exists := index.CollectionSet[decryptColName]; !exists {
 				// Create a new collection file and update the index's collection list
-				newColFileName := CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionList)), decryptColName, index.IndexName)
-				index.CollectionList[decryptColName] = struct{}{}
+				newColFileName := CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionSet)), decryptColName, index.IndexName)
+				index.CollectionSet[decryptColName] = struct{}{}
 				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
 				// Return a success response with the created collection details
 				response.Message = []byte("Successfully created the collection " + decryptColName + " in the file " + newColFileName)
