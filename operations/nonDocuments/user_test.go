@@ -78,59 +78,39 @@ func testCreateCollection(aes []byte, username, password, indexname, colname str
 	return nil
 }
 
-func TestCreateIndex(t *testing.T) {
-	_, e := testRegisterUser("jane", "12345", "4")
-	if e != nil {
-		t.Errorf(e.Error())
-	}
-	aes, e := testSignIn("jane", "12345", "4")
-	if e != nil {
-		t.Errorf(e.Error())
-	}
-	e = testCreateIndex(aes, "jane", "12345", "MyFirstIndex")
-	if e != nil {
-		t.Errorf(e.Error())
-	}
-	e = testCreateIndex(aes, "jane", "12345", "MySecondIndex")
-	if e != nil {
-		t.Errorf(e.Error())
-	}
-	os.Remove("desktopPublic.pem")
-	os.Remove("desktopPrivate.pem")
-	util.DeleteFile("user", "4", true)
-	util.DeleteFile("index", "4-0", true)
-	util.DeleteFile("index", "4-1", true)
-	util.RemoveLineFromFile(util.FindFolder("admin-user"), "jane,4")
-}
-
 func TestCreateCollection(t *testing.T) {
-	_, e := testRegisterUser("mary", "12345", "4")
+	_, e := testRegisterUser("bob", "12345", "2")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	aes, e := testSignIn("mary", "12345", "4")
+	aes, e := testSignIn("bob", "12345", "2")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	e = testCreateIndex(aes, "mary", "12345", "MyFirstIndex")
+	e = testCreateIndex(aes, "bob", "12345", "MyFirstIndex")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	e = testCreateCollection(aes, "mary", "12345", "MyFirstIndex", "MyFirstCol")
+	e = testCreateIndex(aes, "bob", "12345", "MySecondIndex")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
-	e = testCreateCollection(aes, "mary", "12345", "MyFirstIndex", "MySecondCol")
+	e = testCreateCollection(aes, "bob", "12345", "MyFirstIndex", "MyFirstCol")
+	if e != nil {
+		t.Errorf(e.Error())
+	}
+	e = testCreateCollection(aes, "bob", "12345", "MyFirstIndex", "MySecondCol")
 	if e != nil {
 		t.Errorf(e.Error())
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
-	util.DeleteFile("user", "4", true)
-	util.DeleteFile("index", "4-0", true)
-	util.DeleteFile("collection", "4-0-0", true)
-	util.DeleteFile("collection", "4-0-1", true)
-	util.RemoveLineFromFile(util.FindFolder("admin-user"), "mary,4")
+	util.DeleteFile("user", "2", true)
+	util.DeleteFile("index", "2-0", true)
+	util.DeleteFile("index", "2-1", true)
+	util.DeleteFile("collection", "2-0-0", true)
+	util.DeleteFile("collection", "2-0-1", true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), "bob,2")
 }
 
 // Used only for testing.
