@@ -40,6 +40,7 @@ func RegisterUser(username, password string) {
 		Username: []byte(username),
 		Password: []byte(password),
 		Id:       nextUid,
+		NextIid:  0,
 	}
 	// Write the user's data to the JSON file.
 	util.WriteJsonFile(st.Marshal(user), jsonFilePath)
@@ -136,7 +137,8 @@ func RegisterIndex(indexname, password []byte, username string) st.Response {
 		return response
 	}
 	// Create the new index file and update the user data
-	newIndexFileName := op.CreateIndexFile(uid, strconv.Itoa(len(userData.IndexList)), username, decryptIndexName)
+	newIndexFileName := op.CreateIndexFile(uid, strconv.Itoa(userData.NextIid), username, decryptIndexName)
+	userData.NextIid++
 	userData.IndexList = append(userData.IndexList, newIndexFileName)
 	util.WriteJsonFile(st.Marshal(userData), util.AssembleFileName("user", uid, true))
 	// Return a success response with the created index details
@@ -177,7 +179,8 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 			// Check if the decrypted collection name already exists
 			if _, exists := index.CollectionSet[decryptColName]; !exists {
 				// Create a new collection file and update the index's collection list
-				newColFileName := op.CreateCollectionFile(uid, index.Id, strconv.Itoa(len(index.CollectionSet)), decryptColName, index.IndexName)
+				newColFileName := op.CreateCollectionFile(uid, index.Id, strconv.Itoa(index.NextColId), decryptColName, index.IndexName)
+				index.NextColId++
 				index.CollectionSet[decryptColName] = struct{}{}
 				util.WriteJsonFile(st.Marshal(index), util.AssembleFileName("index", d, true))
 				// Return a success response with the created collection details

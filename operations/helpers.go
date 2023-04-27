@@ -131,10 +131,11 @@ func CreateIndexFile(uid, iid, username, indexname string) string {
 	util.CreateJsonFile("index", fileName)
 	// Initialize index data
 	data := st.Index{
-		Owner:          username,
-		Id:             iid,
-		IndexName:      indexname,
+		Owner:         username,
+		Id:            iid,
+		IndexName:     indexname,
 		CollectionSet: make(map[string]struct{}),
+		NextColId:     0,
 	}
 	// Write index data to the file
 	util.WriteJsonFile(st.Marshal(data), util.AssembleFileName("index", fileName, true))
@@ -148,9 +149,10 @@ func CreateCollectionFile(uid, iid, cid, colname, indexname string) string {
 	// Create the JSON file for the collection
 	util.CreateJsonFile("collection", fileName)
 	col := st.Collection{
-		Index:   indexname,
-		ColName: colname,
-		DocList: make(map[string]st.Document),
+		Index:     indexname,
+		ColName:   colname,
+		DocList:   make(map[string]st.Document),
+		NextDocId: 0,
 	}
 	// Write index data to the file
 	util.WriteJsonFile(st.Marshal(col), util.AssembleFileName("collection", fileName, true))
