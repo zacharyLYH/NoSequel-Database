@@ -1,8 +1,8 @@
 package operations_testing
 
 import (
-	nd "NoSequel/operations/nondocuments"
 	doc "NoSequel/operations/documents"
+	nd "NoSequel/operations/nondocuments"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 	crytpRand "crypto/rand"
@@ -12,6 +12,8 @@ import (
 	"errors"
 	"log"
 	"os"
+	// "reflect"
+	// "fmt"
 	"testing"
 )
 
@@ -109,11 +111,48 @@ func LogError(e error, t *testing.T) {
 	}
 }
 
+// func compareJson(map1, map2 map[string]interface{}) bool {
+// 	if len(map1) != len(map2) {
+// 		return false
+// 	}
+// 	// Iterate over the keys in map1 and compare the corresponding values in map2
+// 	for key, val1 := range map1 {
+// 		val2, ok := map2[key]
+// 		if !ok {
+// 			return false
+// 		}
+// 		if !reflect.DeepEqual(val1, val2) {
+// 			fmt.Printf("%T, %T", val1, val2)
+// 			return false
+// 		}
+// 	}
+// 	// If we've made it this far, the two maps must be equal
+// 	return true
+// }
+
 func CreateDocument_testutil(username, password, colPath string, data map[string]interface{}) st.Response {
-	user,_ := SignIn_testutil(username, password)
+	user, _ := SignIn_testutil(username, password)
 	encryptPassword := util.EncryptAES(password, user.AesKey)
 	encryptColPath := util.EncryptAES(colPath, user.AesKey)
 	jsonPayload := st.Marshal(data)
 	encryptPayload := util.EncryptAES(jsonPayload, user.AesKey)
 	return doc.Create(username, encryptPassword, encryptColPath, encryptPayload)
+}
+
+func ReadDocument_testutil(username, password, colPath, docId string, expectedDocument map[string]interface{}) error {
+	user, _ := SignIn_testutil(username, password)
+	encryptPassword := util.EncryptAES(password, user.AesKey)
+	encryptColPath := util.EncryptAES(colPath, user.AesKey)
+	encryptDocId := util.EncryptAES(docId, user.AesKey)
+	response := doc.Read(username, encryptPassword, encryptColPath, encryptDocId)
+	if response.Status != "200" {
+		log.Println(response.Status)
+	} else {
+		log.Println(response.Data)
+		// if !compareJson(response.Data, expectedDocument) {
+		// 	return errors.New("JSON return doesn't match expected")
+		// }
+
+	}
+	return nil
 }

@@ -43,3 +43,19 @@ func TestCreateDocument(t *testing.T) {
 	util.DeleteFile("collection", person.ExpectedUid+"-0-0", true)
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
 }
+
+func TestReadDocument(t *testing.T) {
+	person := st.TestData{
+		Username:    "bob",
+		Password:    "12345",
+		ExpectedUid: "2",
+	}
+	expectedDocument := map[string]interface{}{
+		"DocId":"2-0-0-0",
+		"name":  "Alice",
+		"age":   28,
+		"email": "alice@example.com",
+	}
+	e := ReadDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", "2-0-0-0", expectedDocument)
+	LogError(e, t)
+}

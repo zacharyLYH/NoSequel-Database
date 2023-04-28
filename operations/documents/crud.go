@@ -14,13 +14,13 @@ ColPath is the path to the collection we're interested in working with. We need 
 
 Upon return from this function, the caller should be confident in the legitamacy of this user's right of modify/create this collection. Subsequently, if a user has right to work with this collection, they can do anything with the documents it encloses.
 */
-func verifyCollectionAccess(username string, password, colPath []byte) bool {
+func verifyCollectionAccess(username string, encryptedPassword, encryptedPathToResource []byte) bool {
 	aes := op.GetAesKeyFromUsername(username)
-	decryptedColPath := string(util.DecryptAES(aes, colPath))
-	if !op.CheckCredentials(username, password) {
+	decryptedColPath := string(util.DecryptAES(aes, encryptedPathToResource))
+	if !op.CheckCredentials(username, encryptedPassword) {
 		return false
 	}
-	indexPath := strings.Join(strings.Split(decryptedColPath, "-")[:2], "-")
+	indexPath := strings.Join(strings.Split(decryptedColPath, "-")[:2], "-") // need to check to make sure split is at least length 2
 	index := st.Index{}
 	st.Unmarshal(util.ReadFile("index", indexPath, true), &index)
 	if index.Owner != username {
@@ -47,6 +47,7 @@ func Create(username string, password, colPath, payload []byte) st.Response {
 		var unmarshallJson map[string]interface{}
 		st.Unmarshal(util.DecryptAES(aes, payload), &unmarshallJson)
 		newDoc.Data = unmarshallJson
+		newDoc.Data["DocId"] = newDoc.DocId
 		collection.DocList[newDoc.DocId] = newDoc
 		util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
 		resp.Data = unmarshallJson
@@ -57,6 +58,22 @@ func Create(username string, password, colPath, payload []byte) st.Response {
 	return resp
 }
 
-// func Read(username string, password, colPath, docId []byte) {
-
-// }
+func Read(username string, password, colPath, docId []byte) st.Response {
+	resp := st.Response{}
+	if verifyCollectionAccess(username, password, colPath) {
+		aes := op.GetAesKeyFromUsername(username)
+		decryptedColPath := string(util.DecryptAES(aes, colPath))
+		decryptedDocId := string(util.DecryptAES(aes, docId))
+		collection := st.Collection{}
+		st.Unmarshal(util.ReadFile("collection", decryptedColPath, true), &collection)
+		if _, exists := collection.DocList[decryptedDocId]; exists {
+			resp.Data = collection.DocList[decryptedDocId].Data
+		} else {
+			resp.Status = "404"
+		}
+		resp.Status = "200"
+	} else {
+		resp.Status = "403"
+	}
+	return resp
+}
