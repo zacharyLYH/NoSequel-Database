@@ -1,7 +1,7 @@
 package main
 
 import (
-	nd "NoSequel/operations/nonDocuments"
+	nd "NoSequel/operations/nondocuments"
 )
 
 func main() {
