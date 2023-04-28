@@ -12,9 +12,9 @@ import (
 	"errors"
 	"log"
 	"os"
+	"testing"
 	// "reflect"
 	// "fmt"
-	"testing"
 )
 
 // Used only for testing.
@@ -152,12 +152,12 @@ func ReadDocument_testutil(username, password, colPath, docId string, expectedDo
 	if response.Status != "200" {
 		log.Println(response.Status)
 	} else {
-		util.DecryptAES(user.AesKey, response.Data)
-		log.Println(response.Data)
+		var raw map[string]interface{}
+		st.Unmarshal(util.DecryptAES(user.AesKey, response.Data), &raw)
+		log.Println(raw)
 		// if !compareJson(response.Data, expectedDocument) {
 		// 	return errors.New("JSON return doesn't match expected")
 		// }
-
 	}
 	return nil
 }

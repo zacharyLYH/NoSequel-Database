@@ -4,9 +4,9 @@ import (
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 	"errors"
-	// "log"
 	"os"
 	"testing"
+	// "log"
 )
 
 func testCreateDocument(username, password, colPath string, data map[string]interface{}, aes []byte) error {
@@ -45,18 +45,18 @@ func TestCreateDocument(t *testing.T) {
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
 }
 
-// func TestReadDocument(t *testing.T) {
-// 	person := st.TestData{
-// 		Username:    "bob",
-// 		Password:    "12345",
-// 		ExpectedUid: "2",
-// 	}
-// 	expectedDocument := map[string]interface{}{
-// 		"DocId":"2-0-0-0",
-// 		"name":  "Alice",
-// 		"age":   28,
-// 		"email": "alice@example.com",
-// 	}
-// 	e := ReadDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", "2-0-0-0", expectedDocument)
-// 	LogError(e, t)
-// }
+func TestReadDocument(t *testing.T) {
+	person := st.TestData{
+		Username:    "bob",
+		Password:    "12345",
+		ExpectedUid: "2",
+	}
+	expectedDocument := map[string]interface{}{
+		"DocId": "2-0-0-0",
+		"name":  "Alice",
+		"age":   28,
+		"email": "alice@example.com",
+	}
+	e := ReadDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", "2-0-0-0", expectedDocument)
+	LogError(e, t)
+}
