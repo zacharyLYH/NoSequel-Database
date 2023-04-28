@@ -4,6 +4,7 @@ import (
 	op "NoSequel/operations"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
+	// "log"
 	"strconv"
 	"strings"
 )
@@ -50,7 +51,7 @@ func Create(username string, password, colPath, payload []byte) st.Response {
 		newDoc.Data["DocId"] = newDoc.DocId
 		collection.DocList[newDoc.DocId] = newDoc
 		util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
-		resp.Data = unmarshallJson
+		resp.Data = util.EncryptAES(st.Marshal(unmarshallJson), aes)
 		resp.Status = "200"
 	} else {
 		resp.Status = "403"
@@ -67,7 +68,7 @@ func Read(username string, password, colPath, docId []byte) st.Response {
 		collection := st.Collection{}
 		st.Unmarshal(util.ReadFile("collection", decryptedColPath, true), &collection)
 		if _, exists := collection.DocList[decryptedDocId]; exists {
-			resp.Data = collection.DocList[decryptedDocId].Data
+			resp.Data = util.EncryptAES(st.Marshal(collection.DocList[decryptedDocId].Data), aes)
 		} else {
 			resp.Status = "404"
 		}

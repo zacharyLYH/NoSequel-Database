@@ -39,7 +39,7 @@ type Document struct {
 type Response struct {
 	Message []byte
 	Status  string
-	Data    map[string]interface{}
+	Data    []byte
 }
 
 type TestData struct {

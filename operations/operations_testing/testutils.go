@@ -136,7 +136,11 @@ func CreateDocument_testutil(username, password, colPath string, data map[string
 	encryptColPath := util.EncryptAES(colPath, user.AesKey)
 	jsonPayload := st.Marshal(data)
 	encryptPayload := util.EncryptAES(jsonPayload, user.AesKey)
-	return doc.Create(username, encryptPassword, encryptColPath, encryptPayload)
+	resp := doc.Create(username, encryptPassword, encryptColPath, encryptPayload)
+	var raw map[string]interface{}
+	st.Unmarshal(util.DecryptAES(user.AesKey, resp.Data), &raw)
+	log.Println(raw)
+	return resp
 }
 
 func ReadDocument_testutil(username, password, colPath, docId string, expectedDocument map[string]interface{}) error {
@@ -148,6 +152,7 @@ func ReadDocument_testutil(username, password, colPath, docId string, expectedDo
 	if response.Status != "200" {
 		log.Println(response.Status)
 	} else {
+		util.DecryptAES(user.AesKey, response.Data)
 		log.Println(response.Data)
 		// if !compareJson(response.Data, expectedDocument) {
 		// 	return errors.New("JSON return doesn't match expected")
