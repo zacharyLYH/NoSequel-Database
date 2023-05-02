@@ -60,3 +60,39 @@ func TestReadDocument(t *testing.T) {
 	e := ReadDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", "2-0-0-0", expectedDocument)
 	LogError(e, t)
 }
+
+func TestUpdateDocument(t *testing.T) {
+	person := st.TestData{
+		Username:    "bob",
+		Password:    "12345",
+		ExpectedUid: "2",
+	}
+	updatedDocument := map[string]interface{}{
+		"DocId": "2-0-0-0",
+		"name":  "Alice",
+		"age":   30,
+		"email": "alice@wonderland.com",
+	}
+	e := UpdateDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", updatedDocument)
+	LogError(e, t)
+}
+
+func TestDeleteDocument(t *testing.T) {
+	person := st.TestData{
+		Username:    "bob",
+		Password:    "12345",
+		ExpectedUid: "2",
+	}
+	data := map[string]interface{}{
+		"name":  "NewData",
+		"age":   28,
+		"email": "NewData@example.com",
+	}
+	user, _ := SignIn_testutil(person.Username, person.Password)
+	person.Aes = user.AesKey
+	e := testCreateDocument(person.Username, person.Password, person.ExpectedUid+"-0-0", data, person.Aes)
+	LogError(e, t)
+	e = DeleteDocument_testutil(person.Username, person.Password, person.ExpectedUid+"-0-0", person.ExpectedUid+"-0-0-1")
+	LogError(e, t)
+	//DON'T FORGET TO CHANGE 2-0-0.json's NextDocID BACK TO 1.
+}

@@ -4,6 +4,7 @@ import (
 	op "NoSequel/operations"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
+
 	// "log"
 	"strconv"
 	"strings"
@@ -73,6 +74,57 @@ func Read(username string, password, colPath, docId []byte) st.Response {
 			resp.Status = "404"
 		}
 		resp.Status = "200"
+	} else {
+		resp.Status = "403"
+	}
+	return resp
+}
+
+// Payload has DocId embedded within it.
+func Update(username string, password, colPath, payload []byte) st.Response {
+	resp := st.Response{}
+	if verifyCollectionAccess(username, password, colPath) {
+		aes := op.GetAesKeyFromUsername(username)
+		var decryptedPayload map[string]interface{}
+		st.Unmarshal(util.DecryptAES(aes, payload), &decryptedPayload)
+		decryptedColPath := string(util.DecryptAES(aes, colPath))
+		collection := st.Collection{}
+		st.Unmarshal(util.ReadFile("collection", decryptedColPath, true), &collection)
+		id := decryptedPayload["DocId"].(string)
+		if _, exists := collection.DocList[id]; exists {
+			doc := st.Document{}
+			doc = collection.DocList[id]
+			doc.Data = decryptedPayload
+			collection.DocList[id] = doc
+			util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
+			resp.Data = util.EncryptAES(st.Marshal(decryptedPayload), aes)
+		} else {
+			resp.Status = "404"
+		}
+		resp.Status = "200"
+	} else {
+		resp.Status = "403"
+	}
+	return resp
+}
+
+func Delete(username string, password, colPath, docId []byte) st.Response {
+	resp := st.Response{}
+	if verifyCollectionAccess(username, password, colPath) {
+		aes := op.GetAesKeyFromUsername(username)
+		decryptedColPath := string(util.DecryptAES(aes, colPath))
+		decryptedDocId := string(util.DecryptAES(aes, docId))
+		collection := st.Collection{}
+		st.Unmarshal(util.ReadFile("collection", decryptedColPath, true), &collection)
+		var deleted map[string]interface{}
+		if _, exists := collection.DocList[decryptedDocId]; exists {
+			deleted = collection.DocList[decryptedDocId].Data
+			delete(collection.DocList, decryptedDocId)
+			util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
+			resp.Data = util.EncryptAES(st.Marshal(deleted), aes)
+		} else {
+			resp.Status = "404"
+		}
 	} else {
 		resp.Status = "403"
 	}

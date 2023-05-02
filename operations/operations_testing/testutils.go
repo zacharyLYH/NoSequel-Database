@@ -161,3 +161,36 @@ func ReadDocument_testutil(username, password, colPath, docId string, expectedDo
 	}
 	return nil
 }
+
+func UpdateDocument_testutil(username, password, colPath string, data map[string]interface{}) error {
+	user, _ := SignIn_testutil(username, password)
+	encryptPassword := util.EncryptAES(password, user.AesKey)
+	encryptColPath := util.EncryptAES(colPath, user.AesKey)
+	jsonPayload := st.Marshal(data)
+	encryptPayload := util.EncryptAES(jsonPayload, user.AesKey)
+	response := doc.Update(username, encryptPassword, encryptColPath, encryptPayload)
+	if response.Status != "200" {
+		log.Println(response.Status)
+	} else {
+		var raw map[string]interface{}
+		st.Unmarshal(util.DecryptAES(user.AesKey, response.Data), &raw)
+		log.Println(raw)
+	}
+	return nil
+}
+
+func DeleteDocument_testutil(username, password, colPath, docId string) error {
+	user, _ := SignIn_testutil(username, password)
+	encryptPassword := util.EncryptAES(password, user.AesKey)
+	encryptColPath := util.EncryptAES(colPath, user.AesKey)
+	encryptDocId := util.EncryptAES(docId, user.AesKey)
+	response := doc.Delete(username, encryptPassword, encryptColPath, encryptDocId)
+	if response.Status != "200" {
+		log.Println(response.Status)
+	} else {
+		var raw map[string]interface{}
+		st.Unmarshal(util.DecryptAES(user.AesKey, response.Data), &raw)
+		log.Println(raw)
+	}
+	return nil
+}
