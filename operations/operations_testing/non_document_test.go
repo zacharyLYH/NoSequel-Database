@@ -38,14 +38,6 @@ func testSignIn(username, password, expectedUid string) error {
 	return nil
 }
 
-func testCreateIndex(aes []byte, username, password, indexname string) error {
-	return CreateIndex_testutil(aes, username, password, indexname)
-}
-
-func testCreateCollection(aes []byte, username, password, indexname, colname string) error {
-	return CreateCollection_testutil(aes, username, password, indexname, colname)
-}
-
 func TestCreateCollection(t *testing.T) {
 	person := st.TestData{
 		Username:    "danny",
@@ -58,13 +50,13 @@ func TestCreateCollection(t *testing.T) {
 	LogError(e, t)
 	user, _ := SignIn_testutil(person.Username, person.Password)
 	person.Aes = user.AesKey
-	e = testCreateIndex(person.Aes, person.Username, person.Password, "MyFirstIndex")
+	e = CreateIndex_testutil(person.Aes, person.Username, person.Password, "MyFirstIndex")
 	LogError(e, t)
-	e = testCreateIndex(person.Aes, person.Username, person.Password, "MySecondIndex")
+	e = CreateIndex_testutil(person.Aes, person.Username, person.Password, "MySecondIndex")
 	LogError(e, t)
-	e = testCreateCollection(person.Aes, person.Username, person.Password, "MyFirstIndex", "MyFirstCol")
+	e = CreateCollection_testutil(person.Aes, person.Username, person.Password, "MyFirstIndex", "MyFirstCol")
 	LogError(e, t)
-	e = testCreateCollection(person.Aes, person.Username, person.Password, "MyFirstIndex", "MySecondCol")
+	e = CreateCollection_testutil(person.Aes, person.Username, person.Password, "MyFirstIndex", "MySecondCol")
 	LogError(e, t)
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
