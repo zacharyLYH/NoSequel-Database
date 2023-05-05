@@ -194,3 +194,17 @@ func DeleteDocument_testutil(username, password, colPath, docId string) error {
 	}
 	return nil
 }
+
+func GetMetaData_testutil(username, password string) error {
+	user, _ := SignIn_testutil(username, password)
+	encryptPassword := util.EncryptAES(password, user.AesKey)
+	response := nd.GetMetaData(username, encryptPassword)
+	if response.Status != "200" {
+		log.Println(response.Status)
+	} else {
+		var raw map[string]interface{}
+		st.Unmarshal(util.DecryptAES(user.AesKey, response.Data), &raw)
+		log.Println(raw)
+	}
+	return nil
+}

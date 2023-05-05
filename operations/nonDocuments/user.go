@@ -198,3 +198,28 @@ func RegisterCollection(username string, indexName, colName, password []byte) st
 	// Return an empty response if no matching index is found
 	return response
 }
+
+// Takes an aes encrypted password and plaintext username. Returns all the metadata for this user, encrypted as a JSON object.
+func GetMetaData(username string, password []byte) st.Response {
+	resp := st.Response{}
+	aes := op.GetAesKeyFromUsername(username)
+	uid := op.ReturnUidFromUsername(username)
+	if op.CheckCredentials(username, password) {
+		ret := make(map[string]interface{})
+		data := st.User{}
+		st.Unmarshal(util.ReadFile("user", uid, true), &data)
+		ret["indexs"] = data.IndexList
+		var allCollection []map[string]string
+		for _, idxName := range data.IndexList {
+			indexStruct := st.Index{}
+			st.Unmarshal(util.ReadFile("index", idxName, true), &indexStruct)
+			allCollection = append(allCollection, indexStruct.CollectionSet)
+		}
+		ret["collections"] = allCollection
+		resp.Data = util.EncryptAES(st.Marshal(ret), aes)
+		resp.Status = "200"
+	} else {
+		resp.Status = "403"
+	}
+	return resp
+}

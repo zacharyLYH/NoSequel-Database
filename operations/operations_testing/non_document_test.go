@@ -75,3 +75,12 @@ func TestCreateCollection(t *testing.T) {
 	util.DeleteFile("collection", person.ExpectedUid+"-0-1", true)
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
 }
+
+func TestGetMetaData(t *testing.T) {
+	person := st.TestData{
+		Username: "alice",
+		Password: "12345",
+	}
+	e := GetMetaData_testutil(person.Username, person.Password)
+	LogError(e, t)
+}
