@@ -49,6 +49,15 @@ type TestData struct {
 	ExpectedUid string
 }
 
+type ServerReceive struct {
+	DeserializeSuccesful bool
+	Username             string
+	PasswordByte         []byte
+	PasswordString       string
+	ColPath              []byte
+	Payload              []byte
+}
+
 func Marshal(obj interface{}) []byte {
 	content, err := json.Marshal(obj)
 	if err != nil {
