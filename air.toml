@@ -1,0 +1,14 @@
+# .air.toml
+
+# The directory to watch for changes
+root = "./"
+
+# The command to run to start the server
+command = "go run ."
+
+# The file extensions to watch for changes
+ext = ["go"]
+
+# The environment variables to set
+[env]
+  PORT = "8080"
