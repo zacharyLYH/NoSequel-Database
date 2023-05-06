@@ -71,8 +71,11 @@ func SignIn_testutil(username, password string) (st.User, error) {
 		ClientPub: util.ExtractPubKey("desktopPublic.pem"),
 	}
 	signInResult := nd.SignIn(st.Marshal(signIn))
-	decryptResult := util.DecryptRSA(signInResult, util.ExtractPrivKey("desktopPrivate.pem"))
 	result := st.User{}
+	if signInResult.Status != "200" {
+		return result, errors.New("sign in failed")
+	}
+	decryptResult := util.DecryptRSA(signInResult.Data, util.ExtractPrivKey("desktopPrivate.pem"))
 	st.Unmarshal(decryptResult, &result)
 	if len(result.AesKey) != 32 {
 		return result, errors.New("sign in failed")

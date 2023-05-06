@@ -70,10 +70,10 @@ func Read(username string, password, colPath, docId []byte) st.Response {
 		st.Unmarshal(util.ReadFile("collection", decryptedColPath, true), &collection)
 		if _, exists := collection.DocList[decryptedDocId]; exists {
 			resp.Data = util.EncryptAES(st.Marshal(collection.DocList[decryptedDocId].Data), aes)
+			resp.Status = "200"
 		} else {
-			resp.Status = "404"
+			resp.Status = "404 read"
 		}
-		resp.Status = "200"
 	} else {
 		resp.Status = "403"
 	}
@@ -98,10 +98,10 @@ func Update(username string, password, colPath, payload []byte) st.Response {
 			collection.DocList[id] = doc
 			util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
 			resp.Data = util.EncryptAES(st.Marshal(decryptedPayload), aes)
+			resp.Status = "200"
 		} else {
-			resp.Status = "404"
+			resp.Status = "404 update"
 		}
-		resp.Status = "200"
 	} else {
 		resp.Status = "403"
 	}
@@ -122,8 +122,9 @@ func Delete(username string, password, colPath, docId []byte) st.Response {
 			delete(collection.DocList, decryptedDocId)
 			util.WriteJsonFile(st.Marshal(collection), util.AssembleFileName("collection", decryptedColPath, true))
 			resp.Data = util.EncryptAES(st.Marshal(deleted), aes)
+			resp.Status = "200"
 		} else {
-			resp.Status = "404"
+			resp.Status = "404 delete"
 		}
 	} else {
 		resp.Status = "403"

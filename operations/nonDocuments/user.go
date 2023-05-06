@@ -14,7 +14,7 @@ RegisterUser checks if the specified username already exists in the "admin-user"
 username is not a duplicate, the function creates a new user ID and saves the user's username,
 password, and ID in the "user" and "admin-user" files.
 */
-func RegisterUser(username, password string) st.Response{
+func RegisterUser(username, password string) st.Response {
 	resp := st.Response{}
 	// Check if the specified username already exists in the "admin-user" file.
 	if op.ReturnUidFromUsername(username) != "" {
@@ -62,7 +62,8 @@ encrypted user data, including the user's ID, username, index list, and a
 newly generated AES key for further communication. If the sign-in process
 fails, it returns an empty struct encrypted with the user's public key.
 */
-func SignIn(ciphertext []byte) []byte {
+func SignIn(ciphertext []byte) st.Response {
+	resp := st.Response{}
 	// Extract the server's private key
 	privateKey := util.ExtractPrivKey(util.FindFolder("rsa") + "serverPrivate.pem")
 	// Deserialize the ciphertext into a plaintext User instance
@@ -97,9 +98,14 @@ func SignIn(ciphertext []byte) []byte {
 		saveAes.IndexList = ret.IndexList
 		// Write the updated User instance to file
 		util.WriteJsonFile(st.Marshal(saveAes), util.AssembleFileName("user", uid, true))
+		resp.Data = util.EncryptRSA(plaintext.ClientPub, st.Marshal(ret))
+		resp.Status = "200"
 	}
-	// Encrypt and return the serialized return User instance
-	return util.EncryptRSA(plaintext.ClientPub, st.Marshal(ret))
+	if resp.Status != "200" {
+		resp.Status = "400"
+		resp.Message = []byte("Failed for some reason")
+	}
+	return resp
 }
 
 /*
