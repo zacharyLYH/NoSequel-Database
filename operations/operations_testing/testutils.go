@@ -2,7 +2,7 @@ package operations_testing
 
 import (
 	doc "NoSequel/operations/documents"
-	nd "NoSequel/operations/nondocuments"
+	nd "NoSequel/operations/nonDocuments"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 	crytpRand "crypto/rand"

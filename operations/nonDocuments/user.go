@@ -1,4 +1,4 @@
-package nondocuments
+package nonDocuments
 
 import (
 	op "NoSequel/operations"
@@ -14,7 +14,8 @@ RegisterUser checks if the specified username already exists in the "admin-user"
 username is not a duplicate, the function creates a new user ID and saves the user's username,
 password, and ID in the "user" and "admin-user" files.
 */
-func RegisterUser(username, password string) {
+func RegisterUser(username, password string) st.Response{
+	resp := st.Response{}
 	// Check if the specified username already exists in the "admin-user" file.
 	if op.ReturnUidFromUsername(username) != "" {
 		log.Fatal("Attempting to create duplicate username")
@@ -23,13 +24,15 @@ func RegisterUser(username, password string) {
 	adminPath := util.FindFolder("admin-user")
 	file, err := os.OpenFile(adminPath, os.O_RDONLY, 0444)
 	if err != nil {
-		log.Fatal(err)
+		resp.Status = "400"
+		return resp
 	}
 	defer file.Close()
 	// Get the current size of the "admin-user" file (i.e. the number of existing users).
 	fileSize, err := op.LineCounter(file)
 	if err != nil {
-		log.Fatal(err)
+		resp.Status = "400"
+		return resp
 	}
 	// Generate a new UID (user ID) for the new user by converting the file size to a string.
 	nextUid := strconv.Itoa(fileSize)
@@ -46,6 +49,9 @@ func RegisterUser(username, password string) {
 	util.WriteJsonFile(st.Marshal(user), jsonFilePath)
 	// Append the user's username and UID to the "admin-user" file.
 	util.WriteTxtFile(username+","+nextUid+"\n", adminPath)
+	resp.Status = "200"
+	resp.Message = []byte("Created an account for " + username)
+	return resp
 }
 
 /*
