@@ -1,9 +1,14 @@
 package main
 
 import (
-	nd "NoSequel/operations/nondocuments"
+	"github.com/labstack/echo"
 )
 
 func main() {
-	nd.RegisterUser("ali", "password")
+	// Create a new instance of the Echo router
+	e := echo.New()
+	e.GET("/sayHello", sayHello)
+	e.POST("/register", register)
+	// Start the Echo server on port 8080
+	e.Start(":8080")
 }
