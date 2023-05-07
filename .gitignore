@@ -3,3 +3,5 @@
 # Client Public Private Keys
 /operations/operations_testing/desktopPrivate.pem
 /operations/operations_testing/desktopPublic.pem
+desktopPrivate.pem
+desktopPublic.pem
