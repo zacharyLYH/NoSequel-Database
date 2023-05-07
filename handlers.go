@@ -3,19 +3,20 @@ package main
 import (
 	nd "NoSequel/operations/nonDocuments"
 	st "NoSequel/structures"
+	util "NoSequel/utils"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo"
 )
 
-func deserializeInputJSON(c echo.Context) st.ServerReceive {
+func deserializeInputJSON(c echo.Context) (st.ServerReceive, error) {
 	data := st.ServerReceive{}
 	if err := c.Bind(&data); err != nil {
-		data.DeserializeSuccesful = true
-	} else {
-		data.DeserializeSuccesful = false
+		log.Printf("failed to parse request body: %v", err)
+		return st.ServerReceive{}, err
 	}
-	return data
+	return data, nil
 }
 
 func sayHello(c echo.Context) error {
@@ -26,8 +27,14 @@ func sayHello(c echo.Context) error {
 }
 
 func register(c echo.Context) error {
-	data := deserializeInputJSON(c)
-	resp := nd.RegisterUser(data.Username, data.PasswordString)
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	privateKey := util.ExtractPrivKey(util.FindFolder("rsa") + "serverPrivate.pem")
+	decryptedUsername := string(util.DecryptRSA(data.UsernameByte, privateKey))
+	decryptedPassword := string(util.DecryptRSA(data.PasswordByte, privateKey))
+	resp := nd.RegisterUser(decryptedUsername, decryptedPassword)
 	if resp.Status == "200" {
 		return c.JSON(http.StatusOK, resp)
 	} else {
@@ -36,7 +43,10 @@ func register(c echo.Context) error {
 }
 
 func signIn(c echo.Context) error {
-	data := deserializeInputJSON(c)
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
 	resp := nd.SignIn(data.Payload)
 	if resp.Status == "200" {
 		return c.JSON(http.StatusOK, resp)
@@ -45,6 +55,15 @@ func signIn(c echo.Context) error {
 	}
 }
 
-// func createDocument(c echo.Context) error {
-//     return c.JSON(http.StatusOK, "Hello, World!")
-// }
+func getMetaData(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := nd.GetMetaData(data.UsernameString, data.PasswordByte)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
