@@ -114,3 +114,45 @@ func DecryptAES(key, ciphertext []byte) []byte {
 	return plaintext
 }
 
+func CreatePubPrivPemKey() {
+	privatekey, err := rsa.GenerateKey(crytpRand.Reader, 2048)
+	if err != nil {
+		log.Fatalf("Cannot generate RSA key\n")
+		os.Exit(1)
+	}
+	publickey := &privatekey.PublicKey
+	var privateKeyBytes []byte = x509.MarshalPKCS1PrivateKey(privatekey)
+	privateKeyBlock := &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: privateKeyBytes,
+	}
+	privatePem, err := os.Create("desktopPrivate.pem")
+	if err != nil {
+		log.Fatalf("error when create userPrivate.pem: %s \n", err)
+		os.Exit(1)
+	}
+	err = pem.Encode(privatePem, privateKeyBlock)
+	if err != nil {
+		log.Fatalf("error when encode Private pem: %s \n", err)
+		os.Exit(1)
+	}
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(publickey)
+	if err != nil {
+		log.Fatalf("error when dumping publickey: %s \n", err)
+		os.Exit(1)
+	}
+	publicKeyBlock := &pem.Block{
+		Type:  "RSA PUBLIC KEY",
+		Bytes: publicKeyBytes,
+	}
+	publicPem, err := os.Create("desktopPublic.pem")
+	if err != nil {
+		log.Fatalf("error when create public.pem: %s \n", err)
+		os.Exit(1)
+	}
+	err = pem.Encode(publicPem, publicKeyBlock)
+	if err != nil {
+		log.Fatalf("error when encode public pem: %s \n", err)
+		os.Exit(1)
+	}
+}
