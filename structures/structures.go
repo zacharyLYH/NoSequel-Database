@@ -43,15 +43,18 @@ type Response struct {
 }
 
 type TestData struct {
-	Username    string
-	Password    string
-	Aes         []byte
-	ExpectedUid string
+	Username           string
+	Password           string
+	Aes                []byte
+	ExpectedUid        string
+	ExpectedIndex      []string
+	ExpectedCollection map[string]string
 }
 
 type ServerReceive struct {
 	DeserializeSuccesful bool
-	Username             string
+	UsernameString       string
+	UsernameByte         []byte
 	PasswordByte         []byte
 	PasswordString       string
 	ColPath              []byte
