@@ -221,11 +221,13 @@ func GetMetaData(username string, password []byte) st.Response {
 		data := st.User{}
 		st.Unmarshal(util.ReadFile("user", uid, true), &data)
 		ret["indexs"] = data.IndexList
-		var allCollection []map[string]string
+		allCollection := make(map[string]string)
 		for _, idxName := range data.IndexList {
 			indexStruct := st.Index{}
 			st.Unmarshal(util.ReadFile("index", idxName, true), &indexStruct)
-			allCollection = append(allCollection, indexStruct.CollectionSet)
+			for k, v := range indexStruct.CollectionSet {
+				allCollection[k] = v
+			}
 		}
 		ret["collections"] = allCollection
 		resp.Data = util.EncryptAES(st.Marshal(ret), aes)
