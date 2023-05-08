@@ -109,7 +109,6 @@ func TestSignInUser(t *testing.T) {
 	}
 	input := st.ServerReceive{}
 	input.Payload = st.Marshal(signInRequestBody)
-	// log.Println(st.Marshal(signInRequestBody))
 	req := httptest.NewRequest(http.MethodPost, "/signIn", bytes.NewReader(st.Marshal(input)))
 	req.Header.Set("Content-Type", "application/json")
 	// Create a new recorder to capture the response
@@ -208,4 +207,65 @@ func TestGetMetaData(t *testing.T) {
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
+}
+
+func TestCreateIndex(t *testing.T) {
+	person := st.TestData{
+		Username:    "danny",
+		Password:    "12345",
+		ExpectedUid: "3",
+		NewIndexName: "FirstIndexFakeUser",
+		NewIndexFileId: "3-0",
+	}
+	test_util.Register_testutil(person.Username, person.Password)
+	dannyUser, _ := test_util.SignIn_testutil(person.Username, person.Password)
+	e := echo.New()
+	// Define the API route
+	e.POST("/createIndex", createIndex)
+	input := st.ServerReceive{}
+	input.IndexNameByte = util.EncryptAES(person.NewIndexName, dannyUser.AesKey)
+	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
+	input.UsernameString = person.Username
+	req := httptest.NewRequest(http.MethodPost, "/createIndex", bytes.NewReader(st.Marshal(input)))
+	req.Header.Set("Content-Type", "application/json")
+	// Create a new recorder to capture the response
+	rec := httptest.NewRecorder()
+	// Call the API handler function, passing in the request and response recorder
+	e.ServeHTTP(rec, req)
+	// Check the response status code
+	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
+		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
+	}
+	var resp st.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Errorf("unable to parse response body: %v", err)
+	}
+	//Read the file created and the user's file. Manually check if data was created correctly.
+	if resp.Status == "200" {
+		userData := st.User{}
+		st.Unmarshal(util.ReadFile("user", person.ExpectedUid, true), &userData)
+		found := false
+		for _,idx := range userData.IndexList {
+			if idx == person.NewIndexFileId{
+				found = true
+				break
+			}
+		}
+		if !found{
+			t.Errorf("couldn't find %s in the test index", person.NewIndexFileId)
+		}
+		createdIndex := st.Index{}
+		st.Unmarshal(util.ReadFile("index", person.NewIndexFileId, true), &createdIndex)
+		if createdIndex.IndexName != person.NewIndexName{
+			t.Errorf("new index name is %s; expected %s", createdIndex.IndexName, person.NewIndexName)
+		}
+		if createdIndex.Owner != person.Username{
+			t.Errorf("new index name is %s; expected %s", createdIndex.Owner, person.Username)
+		}
+	}
+	os.Remove("desktopPublic.pem")
+	os.Remove("desktopPrivate.pem")
+	util.DeleteFile("user", person.ExpectedUid, true)
+	util.DeleteFile("index", person.NewIndexFileId, true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
 }

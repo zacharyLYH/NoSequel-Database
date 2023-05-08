@@ -11,6 +11,7 @@ func main() {
 	e.POST("/register", register)
 	e.GET("/getMetaData", getMetaData)
 	e.POST("/signIn", signIn)
+	e.POST("/createIndex", createIndex)
 	// Start the Echo server on port 8080
 	e.Start(":8080")
 }

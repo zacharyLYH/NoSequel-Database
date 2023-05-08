@@ -67,3 +67,16 @@ func getMetaData(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 }
+
+func createIndex(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := nd.RegisterIndex(data.IndexNameByte, data.PasswordByte, data.UsernameString)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
