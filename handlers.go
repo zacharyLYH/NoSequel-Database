@@ -80,3 +80,16 @@ func createIndex(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 }
+
+func createCollection(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := nd.RegisterCollection(data.UsernameString, data.IndexNameByte, data.ColNameByte, data.PasswordByte)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
