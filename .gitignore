@@ -5,3 +5,6 @@
 /operations/operations_testing/desktopPublic.pem
 desktopPrivate.pem
 desktopPublic.pem
+
+#database
+/operations/database/
