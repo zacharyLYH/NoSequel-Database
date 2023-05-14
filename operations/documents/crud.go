@@ -5,7 +5,7 @@ import (
 	st "NoSequel/structures"
 	util "NoSequel/utils"
 
-	// "log"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -20,6 +20,7 @@ func verifyCollectionAccess(username string, encryptedPassword, encryptedPathToR
 	aes := op.GetAesKeyFromUsername(username)
 	decryptedColPath := string(util.DecryptAES(aes, encryptedPathToResource))
 	if !op.CheckCredentials(username, encryptedPassword) {
+		log.Printf("expected %s, got %s", op.GetPasswordFromUsername(username), util.DecryptAES(aes, encryptedPassword))
 		return false
 	}
 	indexPath := strings.Join(strings.Split(decryptedColPath, "-")[:2], "-") // need to check to make sure split is at least length 2
