@@ -119,7 +119,7 @@ Takes a username and password. Returns true if the user's credentials match up, 
 func CheckCredentials(username string, password []byte) bool {
 	aes := GetAesKeyFromUsername(username)
 	// Decrypt the password and check
-	return bytes.Equal(GetPasswordFromUsername(username), []byte(util.DecryptAES(aes, password)))
+	return bytes.Equal(GetPasswordFromUsername(username), util.DecryptAES(aes, password))
 }
 
 // CreateIndexFile creates a new index file for the specified user and index.
