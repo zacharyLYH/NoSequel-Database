@@ -1,6 +1,7 @@
 package main
 
 import (
+	doc "NoSequel/operations/documents"
 	nd "NoSequel/operations/nonDocuments"
 	st "NoSequel/structures"
 	util "NoSequel/utils"
@@ -87,6 +88,19 @@ func createCollection(c echo.Context) error {
 		return e
 	}
 	resp := nd.RegisterCollection(data.UsernameString, data.IndexNameByte, data.ColNameByte, data.PasswordByte)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
+
+func createDocument(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := doc.Create(data.UsernameString, data.PasswordByte, data.ColPath, data.Payload)
 	if resp.Status == "200" {
 		return c.JSON(http.StatusOK, resp)
 	} else {
