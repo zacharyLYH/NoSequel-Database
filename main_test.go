@@ -21,21 +21,7 @@ func TestSayHello(t *testing.T) {
 	// Create a new instance of the Echo router
 	e := echo.New()
 	e.GET("/sayHello", sayHello)
-	// Create a new request to the /sayHello endpoint
-	req := httptest.NewRequest(http.MethodGet, "/sayHello", nil)
-	// Create a new response recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the /sayHello endpoint with the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK {
-		t.Errorf("unexpected status code: got %v, want %v", rec.Code, http.StatusOK)
-	}
-	// Parse the response body into a Response object
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
+	resp := makeHttpRequestReturnResponse(t, e, st.ServerReceive{}, "GET", "/sayHello")
 	// Check the response message
 	expectedMessage := "Hello World"
 	if string(resp.Message) != expectedMessage {
@@ -58,7 +44,7 @@ func TestRegisterUser(t *testing.T) {
 	input := st.ServerReceive{}
 	input.UsernameByte = util.EncryptRSA(serverPubKey, []byte(person.Username))
 	input.PasswordByte = util.EncryptRSA(serverPubKey, []byte(person.Password))
-	payload, _ := json.Marshal(input)
+	payload:= st.Marshal(input)
 	// Define a request object with the payload
 	req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -109,21 +95,7 @@ func TestSignInUser(t *testing.T) {
 	}
 	input := st.ServerReceive{}
 	input.Payload = st.Marshal(signInRequestBody)
-	req := httptest.NewRequest(http.MethodPost, "/signIn", bytes.NewReader(st.Marshal(input)))
-	req.Header.Set("Content-Type", "application/json")
-	// Create a new recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the API handler function, passing in the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
-		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
-	}
-	// Parse the response body into a Response object
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
+	resp := makeHttpRequestReturnResponse(t, e, input, "POST", "/signIn")
 	// Check the response message
 	if resp.Status == "200" {
 		result := st.User{}
@@ -163,20 +135,7 @@ func TestGetMetaData(t *testing.T) {
 	input := st.ServerReceive{}
 	input.UsernameString = person.Username
 	input.PasswordByte = util.EncryptAES(person.Password, loggedInUser.AesKey)
-	req := httptest.NewRequest(http.MethodGet, "/getMetaData", bytes.NewReader(st.Marshal(input)))
-	req.Header.Set("Content-Type", "application/json")
-	// Create a new recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the API handler function, passing in the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
-		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
-	}
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
+	resp := makeHttpRequestReturnResponse(t, e, input, "GET", "/getMetaData")
 	if resp.Status == "200" {
 		result := make(map[string]interface{})
 		st.Unmarshal(util.DecryptAES(loggedInUser.AesKey, resp.Data), &result)
@@ -230,21 +189,7 @@ func TestCreateIndex(t *testing.T) {
 	input.IndexNameByte = util.EncryptAES(person.NewIndexName, dannyUser.AesKey)
 	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
 	input.UsernameString = person.Username
-	req := httptest.NewRequest(http.MethodPost, "/createIndex", bytes.NewReader(st.Marshal(input)))
-	req.Header.Set("Content-Type", "application/json")
-	// Create a new recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the API handler function, passing in the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
-		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
-	}
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
-	//Read the file created and the user's file. Manually check if data was created correctly.
+	resp := makeHttpRequestReturnResponse(t, e, input, "POST", "/createIndex")
 	if resp.Status == "200" {
 		userData := st.User{}
 		st.Unmarshal(util.ReadFile("user", person.ExpectedUid, true), &userData)
@@ -297,20 +242,7 @@ func TestCreateCollection(t *testing.T) {
 	input.ColNameByte = util.EncryptAES(person.NewColName, dannyUser.AesKey)
 	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
 	input.UsernameString = person.Username
-	req := httptest.NewRequest(http.MethodPost, "/createCollection", bytes.NewReader(st.Marshal(input)))
-	req.Header.Set("Content-Type", "application/json")
-	// Create a new recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the API handler function, passing in the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
-		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
-	}
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
+	resp := makeHttpRequestReturnResponse(t, e, input, "POST", "/createCollection")
 	if resp.Status == "200" {
 		index := st.Index{}
 		st.Unmarshal(util.ReadFile("index", person.NewIndexFileId, true), &index)
@@ -372,20 +304,7 @@ func TestCreateDocument(t *testing.T) {
 	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
 	input.ColPath = util.EncryptAES(person.NewColFileId, dannyUser.AesKey)
 	input.Payload = util.EncryptAES(st.Marshal(person.Payload), dannyUser.AesKey)
-	req := httptest.NewRequest(http.MethodPost, "/createDocument", bytes.NewReader(st.Marshal(input)))
-	req.Header.Set("Content-Type", "application/json")
-	// Create a new recorder to capture the response
-	rec := httptest.NewRecorder()
-	// Call the API handler function, passing in the request and response recorder
-	e.ServeHTTP(rec, req)
-	// Check the response status code
-	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
-		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
-	}
-	var resp st.Response
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Errorf("unable to parse response body: %v", err)
-	}
+	resp := makeHttpRequestReturnResponse(t, e, input, "POST", "/createDocument")
 	if resp.Status == "200" {
 		collection := st.Collection{}
 		st.Unmarshal(util.ReadFile("collection", person.NewColFileId, true), &collection)
@@ -406,4 +325,22 @@ func TestCreateDocument(t *testing.T) {
 	util.DeleteFile("index", person.NewIndexFileId, true)
 	util.DeleteFile("collection", person.NewColFileId, true)
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
+}
+
+func makeHttpRequestReturnResponse(t *testing.T, e *echo.Echo,input st.ServerReceive, requestType, endpoint string) st.Response {
+	req := httptest.NewRequest(requestType, endpoint, bytes.NewReader(st.Marshal(input)))
+	req.Header.Set("Content-Type", "application/json")
+	// Create a new recorder to capture the response
+	rec := httptest.NewRecorder()
+	// Call the API handler function, passing in the request and response recorder
+	e.ServeHTTP(rec, req)
+	// Check the response status code
+	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
+		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
+	}
+	var resp st.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Errorf("unable to parse response body: %v", err)
+	}
+	return resp
 }
