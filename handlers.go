@@ -107,3 +107,16 @@ func createDocument(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 }
+
+func readDocument(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := doc.Read(data.UsernameString, data.PasswordByte, data.ColPath, data.DocumentIdByte)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
