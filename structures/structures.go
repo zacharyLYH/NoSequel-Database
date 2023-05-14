@@ -67,6 +67,7 @@ type ServerReceive struct {
 	Payload              []byte
 	IndexNameByte        []byte
 	ColNameByte          []byte
+	DocumentIdByte       []byte
 }
 
 func Marshal(obj interface{}) []byte {

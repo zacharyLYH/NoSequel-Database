@@ -44,7 +44,7 @@ func TestRegisterUser(t *testing.T) {
 	input := st.ServerReceive{}
 	input.UsernameByte = util.EncryptRSA(serverPubKey, []byte(person.Username))
 	input.PasswordByte = util.EncryptRSA(serverPubKey, []byte(person.Password))
-	payload:= st.Marshal(input)
+	payload := st.Marshal(input)
 	// Define a request object with the payload
 	req := httptest.NewRequest(http.MethodPost, "/register", bytes.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -327,7 +327,58 @@ func TestCreateDocument(t *testing.T) {
 	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
 }
 
-func makeHttpRequestReturnResponse(t *testing.T, e *echo.Echo,input st.ServerReceive, requestType, endpoint string) st.Response {
+func TestReadDocument(t *testing.T) {
+	payload := map[string]interface{}{
+		"key1": 42,
+		"key2": "value",
+		"key3": []int{1, 2, 3},
+		"key4": map[string]interface{}{
+			"nested1": "nested value",
+			"nested2": 3.14,
+		},
+	}
+	person := st.TestData{
+		Username:       "danny",
+		Password:       "12345",
+		ExpectedUid:    "3",
+		NewIndexName:   "FirstIndexFakeUser",
+		NewIndexFileId: "3-0",
+		NewColName:     "FirstCollectionYey",
+		NewColFileId:   "3-0-0",
+		Payload:        payload,
+		NewDocumentId:  "3-0-0-0",
+	}
+	test_util.Register_testutil(person.Username, person.Password)
+	dannyUser, _ := test_util.SignIn_testutil(person.Username, person.Password)
+	test_util.CreateIndex_testutil(dannyUser.AesKey, person.Username, person.Password, person.NewIndexName)
+	test_util.CreateCollection_testutil(dannyUser.AesKey, person.Username, person.Password, person.NewIndexName, person.NewColName)
+	test_util.CreateDocument_testutil(dannyUser.AesKey, person.Username, person.Password, person.NewColFileId, person.Payload)
+	e := echo.New()
+	// Define the API route
+	e.GET("/readDocument", readDocument)
+	input := st.ServerReceive{}
+	input.UsernameString = person.Username
+	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
+	input.ColPath = util.EncryptAES(person.NewColFileId, dannyUser.AesKey)
+	input.DocumentIdByte = util.EncryptAES(person.NewDocumentId, dannyUser.AesKey)
+	resp := makeHttpRequestReturnResponse(t, e, input, "GET", "/readDocument")
+	if resp.Status == "200" {
+		person.Payload["DocId"] = person.NewDocumentId //add manually for testing.
+		var raw map[string]interface{}
+		st.Unmarshal(util.DecryptAES(dannyUser.AesKey, resp.Data), &raw)
+		test_util.TestJSONEquality(person.Payload, raw)
+	} else {
+		t.Errorf("unexpected status: got %s, want %s TestReadDocument", resp.Status, "200")
+	}
+	os.Remove("desktopPublic.pem")
+	os.Remove("desktopPrivate.pem")
+	util.DeleteFile("user", person.ExpectedUid, true)
+	util.DeleteFile("index", person.NewIndexFileId, true)
+	util.DeleteFile("collection", person.NewColFileId, true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
+}
+
+func makeHttpRequestReturnResponse(t *testing.T, e *echo.Echo, input st.ServerReceive, requestType, endpoint string) st.Response {
 	req := httptest.NewRequest(requestType, endpoint, bytes.NewReader(st.Marshal(input)))
 	req.Header.Set("Content-Type", "application/json")
 	// Create a new recorder to capture the response
