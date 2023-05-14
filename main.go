@@ -13,6 +13,7 @@ func main() {
 	e.POST("/signIn", signIn)
 	e.POST("/createIndex", createIndex)
 	e.POST("/createCollection", createCollection)
+	e.POST("/createDocument", createDocument)
 	// Start the Echo server on port 8080
 	e.Start(":8080")
 }
