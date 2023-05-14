@@ -49,10 +49,12 @@ type TestData struct {
 	ExpectedUid        string
 	ExpectedIndex      []string
 	ExpectedCollection map[string]string
-	NewIndexName 	   string
-	NewIndexFileId	   string
-	NewColName 		   string
-	NewColFileId 	   string
+	NewIndexName       string
+	NewIndexFileId     string
+	NewColName         string
+	NewColFileId       string
+	Payload            map[string]interface{}
+	NewDocumentId      string
 }
 
 type ServerReceive struct {
@@ -63,8 +65,8 @@ type ServerReceive struct {
 	PasswordString       string
 	ColPath              []byte
 	Payload              []byte
-	IndexNameByte 		 []byte
-	ColNameByte 		 []byte
+	IndexNameByte        []byte
+	ColNameByte          []byte
 }
 
 func Marshal(obj interface{}) []byte {
