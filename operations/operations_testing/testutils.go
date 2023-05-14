@@ -14,8 +14,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	// "reflect"
-	// "fmt"
 )
 
 // Used only for testing.
@@ -115,16 +113,14 @@ func LogError(e error, t *testing.T) {
 	}
 }
 
-func CreateDocument_testutil(username, password, colPath string, data map[string]interface{}) st.Response {
-	user, _ := SignIn_testutil(username, password)
-	encryptPassword := util.EncryptAES(password, user.AesKey)
-	encryptColPath := util.EncryptAES(colPath, user.AesKey)
+func CreateDocument_testutil(aes []byte, username, password, colPath string, data map[string]interface{}) st.Response {
+	encryptPassword := util.EncryptAES(password, aes)
+	encryptColPath := util.EncryptAES(colPath, aes)
 	jsonPayload := st.Marshal(data)
-	encryptPayload := util.EncryptAES(jsonPayload, user.AesKey)
+	encryptPayload := util.EncryptAES(jsonPayload, aes)
 	resp := doc.Create(username, encryptPassword, encryptColPath, encryptPayload)
 	var raw map[string]interface{}
-	st.Unmarshal(util.DecryptAES(user.AesKey, resp.Data), &raw)
-	log.Println(raw)
+	st.Unmarshal(util.DecryptAES(aes, resp.Data), &raw)
 	return resp
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func testCreateDocument(username, password, colPath string, data map[string]interface{}, aes []byte) error {
-	resp := CreateDocument_testutil(username, password, colPath, data)
+	resp := CreateDocument_testutil(aes, username, password, colPath, data)
 	if resp.Status == "403" {
 		return errors.New("Test Create document failed with 403")
 	}
