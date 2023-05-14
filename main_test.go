@@ -137,8 +137,8 @@ func TestSignInUser(t *testing.T) {
 		if result.Id != person.ExpectedUid {
 			t.Errorf("unexpected message: got %s, want %s", string(result.Id), person.ExpectedUid)
 		}
-	}else{
-		t.Errorf("unexpected status: got %s, want %s", resp.Status , "200")
+	} else {
+		t.Errorf("unexpected status: got %s, want %s", resp.Status, "200")
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
@@ -206,8 +206,8 @@ func TestGetMetaData(t *testing.T) {
 		} else {
 			t.Errorf("unexpected col length: got %d, want %d", len(collections.(map[string]interface{})), len(person.ExpectedCollection))
 		}
-	}else{
-		t.Errorf("unexpected status: got %s, want %s", resp.Status , "200")
+	} else {
+		t.Errorf("unexpected status: got %s, want %s", resp.Status, "200")
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
@@ -215,10 +215,10 @@ func TestGetMetaData(t *testing.T) {
 
 func TestCreateIndex(t *testing.T) {
 	person := st.TestData{
-		Username:    "danny",
-		Password:    "12345",
-		ExpectedUid: "3",
-		NewIndexName: "FirstIndexFakeUser",
+		Username:       "danny",
+		Password:       "12345",
+		ExpectedUid:    "3",
+		NewIndexName:   "FirstIndexFakeUser",
 		NewIndexFileId: "3-0",
 	}
 	test_util.Register_testutil(person.Username, person.Password)
@@ -249,25 +249,25 @@ func TestCreateIndex(t *testing.T) {
 		userData := st.User{}
 		st.Unmarshal(util.ReadFile("user", person.ExpectedUid, true), &userData)
 		found := false
-		for _,idx := range userData.IndexList {
-			if idx == person.NewIndexFileId{
+		for _, idx := range userData.IndexList {
+			if idx == person.NewIndexFileId {
 				found = true
 				break
 			}
 		}
-		if !found{
+		if !found {
 			t.Errorf("couldn't find %s in the test index", person.NewIndexFileId)
 		}
 		createdIndex := st.Index{}
 		st.Unmarshal(util.ReadFile("index", person.NewIndexFileId, true), &createdIndex)
-		if createdIndex.IndexName != person.NewIndexName{
+		if createdIndex.IndexName != person.NewIndexName {
 			t.Errorf("new index name is %s; expected %s", createdIndex.IndexName, person.NewIndexName)
 		}
-		if createdIndex.Owner != person.Username{
+		if createdIndex.Owner != person.Username {
 			t.Errorf("new index name is %s; expected %s", createdIndex.Owner, person.Username)
 		}
-	}else{
-		t.Errorf("unexpected status: got %s, want %s", resp.Status , "200")
+	} else {
+		t.Errorf("unexpected status: got %s, want %s", resp.Status, "200")
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
@@ -278,13 +278,13 @@ func TestCreateIndex(t *testing.T) {
 
 func TestCreateCollection(t *testing.T) {
 	person := st.TestData{
-		Username:    "danny",
-		Password:    "12345",
-		ExpectedUid: "3",
-		NewIndexName: "FirstIndexFakeUser",
+		Username:       "danny",
+		Password:       "12345",
+		ExpectedUid:    "3",
+		NewIndexName:   "FirstIndexFakeUser",
 		NewIndexFileId: "3-0",
-		NewColName: "FirstCollectionYey",
-		NewColFileId: "3-0-0",
+		NewColName:     "FirstCollectionYey",
+		NewColFileId:   "3-0-0",
 	}
 	test_util.Register_testutil(person.Username, person.Password)
 	dannyUser, _ := test_util.SignIn_testutil(person.Username, person.Password)
@@ -314,7 +314,7 @@ func TestCreateCollection(t *testing.T) {
 	if resp.Status == "200" {
 		index := st.Index{}
 		st.Unmarshal(util.ReadFile("index", person.NewIndexFileId, true), &index)
-		if value,exists := index.CollectionSet[person.NewColName]; !exists{
+		if value, exists := index.CollectionSet[person.NewColName]; !exists {
 			t.Errorf("collection %s wasn't created", person.NewColName)
 			if value != person.NewColFileId {
 				t.Errorf("collection id %s not equals %s", value, person.NewColName)
@@ -323,13 +323,82 @@ func TestCreateCollection(t *testing.T) {
 		collection := st.Collection{}
 		st.Unmarshal(util.ReadFile("collection", person.NewColFileId, true), &collection)
 		if collection.ColName != person.NewColName {
-			t.Errorf("expected: %s; got: %s ", person.NewColName,collection.ColName)
+			t.Errorf("expected: %s; got: %s ", person.NewColName, collection.ColName)
 		}
 		if collection.Index != person.NewIndexName {
-			t.Errorf("expected: %s; got: %s ", person.NewIndexName,collection.Index)
+			t.Errorf("expected: %s; got: %s ", person.NewIndexName, collection.Index)
 		}
-	}else{
-		t.Errorf("unexpected status: got %s, want %s TestCreateCollection", resp.Status , "200")
+	} else {
+		t.Errorf("unexpected status: got %s, want %s TestCreateCollection", resp.Status, "200")
+	}
+	os.Remove("desktopPublic.pem")
+	os.Remove("desktopPrivate.pem")
+	util.DeleteFile("user", person.ExpectedUid, true)
+	util.DeleteFile("index", person.NewIndexFileId, true)
+	util.DeleteFile("collection", person.NewColFileId, true)
+	util.RemoveLineFromFile(util.FindFolder("admin-user"), person.Username+","+person.ExpectedUid)
+}
+
+func TestCreateDocument(t *testing.T) {
+	payload := map[string]interface{}{
+		"key1": 42,
+		"key2": "value",
+		"key3": []int{1, 2, 3},
+		"key4": map[string]interface{}{
+			"nested1": "nested value",
+			"nested2": 3.14,
+		},
+	}
+	person := st.TestData{
+		Username:       "danny",
+		Password:       "12345",
+		ExpectedUid:    "3",
+		NewIndexName:   "FirstIndexFakeUser",
+		NewIndexFileId: "3-0",
+		NewColName:     "FirstCollectionYey",
+		NewColFileId:   "3-0-0",
+		Payload:        payload,
+		NewDocumentId:  "3-0-0-0",
+	}
+	test_util.Register_testutil(person.Username, person.Password)
+	dannyUser, _ := test_util.SignIn_testutil(person.Username, person.Password)
+	test_util.CreateIndex_testutil(dannyUser.AesKey, person.Username, person.Password, person.NewIndexName)
+	test_util.CreateCollection_testutil(dannyUser.AesKey, person.Username, person.Password, person.NewIndexName, person.NewColName)
+	e := echo.New()
+	// Define the API route
+	e.POST("/createDocument", createDocument)
+	input := st.ServerReceive{}
+	input.UsernameString = person.Username
+	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
+	input.ColPath = util.EncryptAES(person.NewColFileId, dannyUser.AesKey)
+	input.Payload = util.EncryptAES(st.Marshal(person.Payload), dannyUser.AesKey)
+	req := httptest.NewRequest(http.MethodPost, "/createDocument", bytes.NewReader(st.Marshal(input)))
+	req.Header.Set("Content-Type", "application/json")
+	// Create a new recorder to capture the response
+	rec := httptest.NewRecorder()
+	// Call the API handler function, passing in the request and response recorder
+	e.ServeHTTP(rec, req)
+	// Check the response status code
+	if rec.Code != http.StatusOK && rec.Code != http.StatusBadRequest {
+		t.Errorf("unexpected status code: got %v, want %v or %v", rec.Code, http.StatusOK, http.StatusBadRequest)
+	}
+	var resp st.Response
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Errorf("unable to parse response body: %v", err)
+	}
+	if resp.Status == "200" {
+		collection := st.Collection{}
+		st.Unmarshal(util.ReadFile("collection", person.NewColFileId, true), &collection)
+		if _, exists := collection.DocList[person.NewDocumentId]; exists {
+			person.Payload["DocId"] = person.NewDocumentId //add manually for testing.
+			var raw map[string]interface{}
+			st.Unmarshal(util.DecryptAES(dannyUser.AesKey, resp.Data), &raw)
+			test_util.TestJSONEquality(person.Payload, raw)
+		} else {
+			t.Errorf("expected %s to be the new Document ID TestCreateDocument", person.NewDocumentId)
+		}
+	} else {
+		t.Errorf("unexpected status: got %s, want %s TestCreateCollection", resp.Status, "200")
 	}
 	os.Remove("desktopPublic.pem")
 	os.Remove("desktopPrivate.pem")
