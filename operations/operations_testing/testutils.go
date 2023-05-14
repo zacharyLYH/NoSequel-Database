@@ -12,6 +12,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"reflect"
 	"testing"
 	// "reflect"
 	// "fmt"
@@ -114,25 +115,6 @@ func LogError(e error, t *testing.T) {
 	}
 }
 
-// func compareJson(map1, map2 map[string]interface{}) bool {
-// 	if len(map1) != len(map2) {
-// 		return false
-// 	}
-// 	// Iterate over the keys in map1 and compare the corresponding values in map2
-// 	for key, val1 := range map1 {
-// 		val2, ok := map2[key]
-// 		if !ok {
-// 			return false
-// 		}
-// 		if !reflect.DeepEqual(val1, val2) {
-// 			fmt.Printf("%T, %T", val1, val2)
-// 			return false
-// 		}
-// 	}
-// 	// If we've made it this far, the two maps must be equal
-// 	return true
-// }
-
 func CreateDocument_testutil(username, password, colPath string, data map[string]interface{}) st.Response {
 	user, _ := SignIn_testutil(username, password)
 	encryptPassword := util.EncryptAES(password, user.AesKey)
@@ -210,4 +192,72 @@ func GetMetaData_testutil(username, password string) error {
 		log.Println(raw)
 	}
 	return nil
+}
+
+func TestJSONEquality(expected, actual map[string]interface{}) {
+	for key, expectedVal := range expected {
+		actualVal, ok := actual[key]
+		if !ok {
+			log.Printf("actual map does not contain key: %s", key)
+			continue
+		}
+		if !isEqual(expectedVal, actualVal) {
+			log.Printf("value mismatch for key: %s, expected: %v, actual: %v", key, expectedVal, actualVal)
+			log.Printf("%T, %T", expectedVal, actualVal)
+		}
+	}
+	for key := range actual {
+		if _, ok := expected[key]; !ok {
+			log.Printf("unexpected key in actual map: %s", key)
+		}
+	}
+}
+
+func isEqual(expected, actual interface{}) bool {
+	if reflect.TypeOf(expected) != reflect.TypeOf(actual) {
+		switch expected.(type) {
+		case int:
+			if actualVal, ok := actual.(float64); ok {
+				return float64(expected.(int)) == actualVal
+			}
+		case []int:
+			if actualSlice, ok := actual.([]interface{}); ok {
+				return compareIntSlices(expected.([]int), actualSlice)
+			}
+		case []interface{}:
+			if actualSlice, ok := actual.([]interface{}); ok {
+				return compareSlices(expected.([]interface{}), actualSlice)
+			}
+		}
+		return false
+	}
+	return reflect.DeepEqual(expected, actual)
+}
+
+func compareIntSlices(expected []int, actual []interface{}) bool {
+	if len(expected) != len(actual) {
+		return false
+	}
+	for i := range expected {
+		if actualVal, ok := actual[i].(float64); ok {
+			if float64(expected[i]) != actualVal {
+				return false
+			}
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func compareSlices(expected []interface{}, actual []interface{}) bool {
+	if len(expected) != len(actual) {
+		return false
+	}
+	for i := range expected {
+		if !isEqual(expected[i], actual[i]) {
+			return false
+		}
+	}
+	return true
 }
