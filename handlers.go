@@ -120,3 +120,16 @@ func readDocument(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 }
+
+func updateDocument(c echo.Context) error {
+	data, e := deserializeInputJSON(c)
+	if e != nil {
+		return e
+	}
+	resp := doc.Update(data.UsernameString, data.PasswordByte, data.ColPath, data.Payload)
+	if resp.Status == "200" {
+		return c.JSON(http.StatusOK, resp)
+	} else {
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+}
