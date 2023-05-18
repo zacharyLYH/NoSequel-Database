@@ -16,6 +16,7 @@ func main() {
 	e.POST("/createDocument", createDocument)
 	e.GET("/readDocument", readDocument)
 	e.PUT("/updateDocument", updateDocument)
+	e.DELETE("/deleteDocument", deleteDocument)
 	// Start the Echo server on port 8080
 	e.Start(":8080")
 }
