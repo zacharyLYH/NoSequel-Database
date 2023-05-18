@@ -427,13 +427,13 @@ func TestUpdateDocument(t *testing.T) {
 	person.Payload = payload
 	e := echo.New()
 	// Define the API route
-	e.GET("/updateDocument", updateDocument)
+	e.PUT("/updateDocument", updateDocument)
 	input := st.ServerReceive{}
 	input.UsernameString = person.Username
 	input.PasswordByte = util.EncryptAES(person.Password, dannyUser.AesKey)
 	input.ColPath = util.EncryptAES(person.NewColFileId, dannyUser.AesKey)
 	input.Payload = util.EncryptAES(st.Marshal(person.Payload), dannyUser.AesKey)
-	resp := makeHttpRequestReturnResponse(t, e, input, "GET", "/updateDocument")
+	resp := makeHttpRequestReturnResponse(t, e, input, "PUT", "/updateDocument")
 	if resp.Status == "200" {
 		var raw map[string]interface{}
 		st.Unmarshal(util.DecryptAES(dannyUser.AesKey, resp.Data), &raw)
